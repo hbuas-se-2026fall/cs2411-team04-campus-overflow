@@ -8,6 +8,7 @@
 1. 读 `docs/status.md` —— 当前批次、门禁状态。
 2. 读 `docs/progress/<当前用户 GitHub 用户名>.md` —— 本人任务。
 3. `git switch develop && git pull`，然后新建分支；不直接改 `main` / `develop`。
+4. **把看板上对应的卡片从 `Ready` 拖到 `进行中`**。AI 无法操作看板，**必须提醒用户手动拖**；不拖等于没人知道你开始了，可能被重复认领。
 
 ## 完工后（必做）
 
