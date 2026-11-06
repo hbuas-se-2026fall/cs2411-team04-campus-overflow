@@ -109,3 +109,42 @@ jobs:
         run: docker build -f deploy/backend.Dockerfile -t campus-overflow-backend:${{ github.sha }} .
       - name: 构建前端镜像
         run: docker build -f deploy/frontend.Dockerfile -t campus-overflow-web:${{ github.sha }} .
+
+  progress-check:
+    name: 进度文件检查
+    runs-on: ubuntu-latest
+    # 只在 PR 上运行；纯文档 PR 会自动跳过（见脚本内判断）
+    if: github.event_name == 'pull_request'
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: 检查是否更新了本人的进度文件
+        run: |
+          set -euo pipefail
+          AUTHOR="$(echo '${{ github.event.pull_request.user.login }}' | tr '[:upper:]' '[:lower:]')"
+          TARGET="docs/progress/${AUTHOR}.md"
+          git fetch --no-tags origin '${{ github.base_ref }}'
+          CHANGED="$(git diff --name-only 'origin/${{ github.base_ref }}'...HEAD)"
+
+          echo "PR 作者（小写）: ${AUTHOR}"
+          echo "应当更新: ${TARGET}"
+          echo "--- 本次变更文件 ---"
+          echo "${CHANGED}"
+
+          # 纯文档改动（只动了 docs/ 或根目录的 .md）不强制更新进度
+          if ! echo "${CHANGED}" | grep -qvE '^(docs/|.*\.md$)'; then
+            echo "纯文档改动，跳过进度检查。"
+            exit 0
+          fi
+
+          if echo "${CHANGED}" | grep -Fqx "${TARGET}"; then
+            echo "已更新 ${TARGET}，通过。"
+          else
+            echo "未更新 ${TARGET}。"
+            echo "按 CLAUDE.md 第 2 节：完成任务的 PR 必须更新本人的 docs/progress/<用户名>.md。"
+            exit 1
+          fi
+
