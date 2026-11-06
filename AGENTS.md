@@ -97,6 +97,7 @@
 | `docs/issue-batch1/` | 批次 1 的 10 张任务卡 |
 | `docs/adr/` | 架构决策记录 |
 | `docs/sprint0-收尾清单.md` | S0 缺口、未知项与决策记录 |
+| `docs/tech-debt.md` | **技术债与待办**：什么现在不能做、什么时候做 |
 | `CLAUDE.md` | 本文件的精简入口（供 Claude Code 等读取） |
 
 ## 11. 为什么易变内容不放这里
