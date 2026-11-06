@@ -1,0 +1,25 @@
+---
+description: CampusOverflow 项目约定：开工先读进度、完工必须更新自己的 progress 文件
+globs: ["**/*"]
+alwaysApply: true
+---
+
+# 开工前（必做）
+
+1. 读 `docs/status.md`（当前批次与门禁）。
+2. 读 `docs/progress/<当前用户 GitHub 用户名>.md`（本人任务）。
+3. 新建分支再动手，不直接改 `main` / `develop`。
+
+# 完工后（必做）
+
+1. 更新**本人**的 `docs/progress/<用户名>.md`：当前任务、状态、卡点、下一步。
+2. 不要改别人的 progress 文件，也不要改 `docs/status.md`（只有 PO 能改）。
+3. 提醒用户 PR 里勾选「已更新 progress」。
+
+# 红线
+
+- 不修改已有测试断言、不删除测试、不加 `@Disabled`。
+- 领域层不得依赖 Spring / JPA / Jackson。
+- 跨上下文只经 `*-api` 或集成事件。
+
+完整约定见 `CLAUDE.md`。
