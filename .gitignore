@@ -11,3 +11,6 @@ dist/
 # 本地专用：不进版本库
 AGENTS.md
 AGENTS.local.md
+
+# Office / PDF 打开时生成的临时锁文件
+~$*

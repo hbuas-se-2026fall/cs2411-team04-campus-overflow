@@ -1,5 +1,8 @@
 # CampusOverflow · 学生初始框架（Java / Spring Boot 3）
 
+> **开发前先读 [docs/status.md](docs/status.md)**：当前批次、门禁是否通过、谁在做什么。
+> 团队约定见 `AGENTS.md`（本地文件，未提交到仓库）。
+
 这是《软件工程》贯穿项目的**起始代码**。整体骨架、构建脚本、部署与 CI 已经就位，
 **四个限界上下文中的 Identity（身份与认证）是完整的参考实现**，其余三个上下文的核心业务留给你们按 Sprint 实现。
 
