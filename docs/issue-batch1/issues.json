@@ -1,0 +1,62 @@
+[
+  {
+    "file": "01-t1-01.md",
+    "title": "[T1-01] 值对象：MarkdownBody 与 Tags",
+    "labels": ["ctx:qa", "layer:domain"],
+    "assignee": "Bugmageddon"
+  },
+  {
+    "file": "02-t1-02.md",
+    "title": "[T1-02] Question 聚合：post/edit/softDelete",
+    "labels": ["ctx:qa", "layer:domain"],
+    "assignee": "qwerbnmv"
+  },
+  {
+    "file": "03-t1-03.md",
+    "title": "[T1-03] Question.accept 采纳规则",
+    "labels": ["ctx:qa", "layer:domain"],
+    "assignee": "qwerbnmv"
+  },
+  {
+    "file": "04-t1-04.md",
+    "title": "[T1-04] Answer 聚合：5 个方法",
+    "labels": ["ctx:qa", "layer:domain"],
+    "assignee": "kl1h"
+  },
+  {
+    "file": "05-t1-05.md",
+    "title": "[T1-05] Vote 与 Comment 领域规则",
+    "labels": ["ctx:qa", "layer:domain"],
+    "assignee": "kl1h"
+  },
+  {
+    "file": "06-t1-06.md",
+    "title": "[T1-06] 领域边界测试补充",
+    "labels": ["ctx:qa", "layer:domain"],
+    "assignee": "Bugmageddon"
+  },
+  {
+    "file": "07-t0-01.md",
+    "title": "[T0-01] 建立项目看板与里程碑",
+    "labels": ["ctx:infra"],
+    "assignee": "Bugmageddon"
+  },
+  {
+    "file": "08-w-01.md",
+    "title": "[W-01] http/auth.http 冒烟脚本",
+    "labels": ["ctx:docs"],
+    "assignee": "Tourbillion-ANG"
+  },
+  {
+    "file": "09-w-02.md",
+    "title": "[W-02] 统一语言词汇表",
+    "labels": ["ctx:docs"],
+    "assignee": "Tourbillion-ANG"
+  },
+  {
+    "file": "10-w-03.md",
+    "title": "[W-03] 错误码中文对照表 + README 补充",
+    "labels": ["ctx:docs"],
+    "assignee": "Tourbillion-ANG"
+  }
+]

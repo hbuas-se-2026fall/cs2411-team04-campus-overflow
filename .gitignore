@@ -9,7 +9,7 @@ dist/
 .env
 
 # 本地专用：不进版本库
-AGENTS.md
+# 注意：AGENTS.md 是要提交的（给队友的 AI 读），只有 .local 版本不提交
 AGENTS.local.md
 
 # Office / PDF 打开时生成的临时锁文件

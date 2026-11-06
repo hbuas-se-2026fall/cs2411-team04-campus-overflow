@@ -35,6 +35,8 @@
 - 分支保护：`main`、`develop` 禁止直接推送与强推
 - 进度看板建立（本页 + 各成员页）
 - CI 改为渐进式质量门禁（ADR-009）：S0 只跑共享内核与 Identity
+- 项目看板：https://github.com/orgs/hbuas-se-2026fall/projects/23
+- 批次 1 的 10 张任务卡已建（#4–#13），模板与团队约定已就位
 
 ## 进行中
 

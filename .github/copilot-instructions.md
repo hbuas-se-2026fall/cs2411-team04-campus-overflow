@@ -29,3 +29,8 @@ cd backend && mvn -B test -pl <模块> -am     # 跑单个模块测试
 mvn -B test -pl co-bootstrap -Dtest=ArchitectureTest   # 架构检查
 cd frontend && npm run typecheck && npm run build      # 前端
 ```
+
+## 开工第一件事（重要）
+
+把看板上对应的卡片从 `Ready` 拖到 `进行中`。
+AI 无法直接操作看板，**必须提醒用户手动拖**；不拖等于没人知道你开始了，可能被重复认领。
