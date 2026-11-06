@@ -21,3 +21,4 @@ public final class UtcTime {
         return value == null ? null : value.toInstant(ZoneOffset.UTC);
     }
 }
+// ci-check-test
