@@ -53,9 +53,12 @@ public class Question {
         this.version = version;
     }
 
+    /**
+     * 发布新问题。标题、正文、标签的合法性由三个值对象自行校验（QA-1001 / QA-1002 / QA-1004 / QA-1005），
+     * 此处只负责组装聚合：计数器归零、未采纳、未删除。
+     */
     public static Question post(long authorId, Long courseId, Title title, MarkdownBody body, Tags tags, Instant now) {
-        // TODO(S2)：实现 Question.post——参考领域单元测试与 arc42 文档中的业务规则
-        throw new UnsupportedOperationException("TODO(S2)：Question.post 尚未实现");
+        return new Question(null, authorId, courseId, title, body, tags, null, 0, 0, 0, now, now, null, 0);
     }
 
     public static Question reconstitute(Long id, long authorId, Long courseId, Title title, MarkdownBody body,
@@ -65,10 +68,17 @@ public class Question {
                 viewCount, createdAt, updatedAt, deletedAt, version);
     }
 
+    /** 编辑问题：只有提问者本人或课程管理者可以改；已删除的问题不可编辑（QA-1020）。 */
     public void edit(Actor actor, boolean actorManagesCourse, Title newTitle, MarkdownBody newBody, Tags newTags,
                      Instant now) {
-        // TODO(S2)：实现 Question.edit——参考领域单元测试与 arc42 文档中的业务规则
-        throw new UnsupportedOperationException("TODO(S2)：Question.edit 尚未实现");
+        ensureNotDeleted();
+        if (!actor.is(authorId) && !actorManagesCourse) {
+            throw new ForbiddenException("QA-3002", "只有提问者或课程管理者可以编辑该问题");
+        }
+        this.title = Objects.requireNonNull(newTitle);
+        this.body = Objects.requireNonNull(newBody);
+        this.tags = Objects.requireNonNull(newTags);
+        this.updatedAt = now;
     }
 
     /** 采纳最佳答案。 */
@@ -77,19 +87,32 @@ public class Question {
         throw new UnsupportedOperationException("TODO(S2)：Question.accept 尚未实现");
     }
 
+    /**
+     * 软删除问题。课程管理者可以删除任意问题；提问者只能删除尚无回答的问题（QA-1013），
+     * 否则会连带删掉别人已经付出的回答。已删除的问题不能重复删除（QA-1020）。
+     */
     public void softDelete(Actor actor, boolean actorManagesCourse, Instant now) {
-        // TODO(S2)：实现 Question.softDelete——参考领域单元测试与 arc42 文档中的业务规则
-        throw new UnsupportedOperationException("TODO(S2)：Question.softDelete 尚未实现");
+        ensureNotDeleted();
+        if (!actorManagesCourse) {
+            if (!actor.is(authorId)) {
+                throw new ForbiddenException("QA-3003", "只有提问者或课程管理者可以删除该问题");
+            }
+            if (answerCount > 0) {
+                throw new BusinessRuleException("QA-1013", "该问题已有回答，提问者不能删除");
+            }
+        }
+        this.deletedAt = now;
     }
 
+    /** 供 Answer.submit 调用：已删除的问题不能再被回答（QA-1020）。 */
     public void ensureOpenForAnswers() {
-        // TODO(S2)：实现 Question.ensureOpenForAnswers——参考领域单元测试与 arc42 文档中的业务规则
-        throw new UnsupportedOperationException("TODO(S2)：Question.ensureOpenForAnswers 尚未实现");
+        ensureNotDeleted();
     }
 
     private void ensureNotDeleted() {
-        // TODO(S2)：实现 Question.ensureNotDeleted——参考领域单元测试与 arc42 文档中的业务规则
-        throw new UnsupportedOperationException("TODO(S2)：Question.ensureNotDeleted 尚未实现");
+        if (isDeleted()) {
+            throw new BusinessRuleException("QA-1020", "内容已删除，不能再回答、编辑或采纳");
+        }
     }
 
     public boolean isDeleted() {
