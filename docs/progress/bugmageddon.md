@@ -1,12 +1,12 @@
 # PO（Bugmageddon）的进度
 
-最后更新：2026-11-07
-当前任务：`#4` 值对象（MarkdownBody / Tags）—— 代码已写完，待提交 PR
-状态：待评审
+最后更新：2026-11-09
+当前任务：CI 覆盖 `co-qa-domain`（批次 2 第一件事）→ 之后做 `#9` 边界测试
+状态：进行中
 卡在哪：无
 下一步：
-- 开 PR（`Closes #4`），找人 Approve 后合并
-- 合并后开始 `#9` 领域边界测试
+- 合并「CI 覆盖 co-qa-domain」的 PR
+- 做 `#9` 领域边界测试（7 个边界现在都可做，因为领域层已全绿）
 
 ## 已完成
 
@@ -16,4 +16,7 @@
 - **2026-11-06**：修复 5 个乱码文件名
 - **2026-11-06**：全工具 AI 约定（AGENTS.md / CLAUDE.md / 6 个工具入口）
 - **2026-11-06**：Issue 模板、团队约定、批次 1 的 10 张任务卡、项目看板
-- **2026-11-07**：`#4` 实现 `MarkdownBody.ofQuestion/ofAnswer` 与 `Tags.names()`，新增 `MarkdownBodyTest`
+- **2026-11-07**：`#4` 实现 `MarkdownBody` 与 `Tags.names`，新增 `MarkdownBodyTest`（PR #15）
+- **2026-11-09**：评审 PR #16（`#5`）、#18（`#7`/`#8`）、#19（`#6`），提出 endorse 双重判断、NPE 拆箱、checkValue 口径三处修改
+- **2026-11-09**：**批次 1 门禁达成** —— `co-qa-domain` 21/21 全绿
+- **2026-11-09**：CI 覆盖范围加入 `co-qa/co-qa-domain`

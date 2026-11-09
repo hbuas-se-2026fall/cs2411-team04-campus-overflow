@@ -15,6 +15,9 @@
 1. 更新**本人**的 `docs/progress/<用户名>.md`（只改自己的）。
 2. PR 描述写 `Closes #<Issue号>`。
 3. 勾选 PR 模板里的「已更新 progress」。
+4. **设置 PR 右侧栏 4 项**：Labels（`ctx:*` + `layer:*`）、Milestone（当前 Sprint）、Assignees（自己）、Reviewers（≥1 名非作者）。缺一项算未完成。
+5. **Projects 一栏保持 None** —— 看板只放 Issue，PR 挂进去会让看板被代码提交淹没；PR 与 Issue 靠正文 `Closes #N` 关联。
+6. **不要手动关 Issue** —— 只能由 PR 合并自动关闭。手动关会提前用掉看板的「Item closed → 完成」事件，PR 合并后卡片永远卡在「待评审」。
 
 > 不是靠自觉：CI 有「进度文件检查」，代码类 PR 未更新本人 progress 会直接失败；纯文档 PR 自动跳过。
 > `docs/status.md` 只有 PO 能改。

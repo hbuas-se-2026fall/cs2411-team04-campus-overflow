@@ -73,6 +73,9 @@
 - 分支：`feat/xxx`、`fix/xxx`、`docs/xxx`、`ci/xxx`；一个任务一个分支，≤3 天。
 - 提交：`<type>(<scope>): 中文简述`，type ∈ `feat|fix|test|docs|ci|chore`。
 - PR：≤400 行，关联 Issue，附测试证据。
+- **PR 右侧栏 4 项必须设置**：Labels（`ctx:*` + `layer:*`）、Milestone（当前 Sprint）、Assignees（自己）、Reviewers（≥1 名非作者）。缺一项按「未完成」处理——不填 Milestone 会让燃尽图漏卡，不填 Labels 会让贡献分布统计不出来。
+- **PR 的 Projects 一栏保持 None**：看板只放 Issue（一张 Issue = 一张卡），PR 挂进去会让看板被代码提交淹没。PR 与 Issue 的关联靠正文 `Closes #N`，卡片状态由自动化跟着 Issue 走。
+- **Issue 只能由 PR 合并自动关闭**（正文写 `Closes #N`），**严禁手动关 Issue**——手动关会提前用掉看板的「Item closed → 完成」事件，PR 合并后卡片会永远卡在「待评审」。
 
 ## 9. 排期方式（队列 + 门禁，不按天）
 
