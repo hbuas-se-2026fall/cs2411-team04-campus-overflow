@@ -87,6 +87,8 @@ public class Question {
      * 只有提问者或课程管理者可以采纳（QA-3001）；一个问题只能采纳一次（QA-2002）；
      * 被采纳的回答必须属于本题（QA-1010）且未删除（QA-1011）；已删除的问题不能再采纳（QA-1020）。
      * “是否被采纳”只由 Question.acceptedAnswerId 记录，Answer 侧不重复存储。
+     * 归属判断先挡 id == null：问题尚未持久化时无从判断归属，直接按 QA-1010 拒绝，
+     * 否则 answer.questionId() != id 会把 Long 拆箱抛 NPE。
      */
     public void accept(Answer answer, Actor actor, boolean actorManagesCourse) {
         ensureNotDeleted();
@@ -96,7 +98,7 @@ public class Question {
         if (acceptedAnswerId != null) {
             throw new ConflictException("QA-2002", "问题已采纳，不能重复采纳");
         }
-        if (answer.questionId() != id) {
+        if (id == null || answer.questionId() != id) {
             throw new BusinessRuleException("QA-1010", "答案不属于该问题");
         }
         if (answer.isDeleted()) {
