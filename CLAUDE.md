@@ -28,7 +28,7 @@
 - 领域层（`*.domain`）不得依赖 Spring / JPA / Jackson / Swagger。
 - 跨上下文只经 `*-api` 或集成事件。
 - 写操作在 `@Transactional` 内；事件在保存后、同一事务内发布；消费端必须幂等。
-- 错误码严格遵循 `docs/错误码.md`（`BusinessRule`→422、`Conflict`→409、`Forbidden`→403、`NotFound`→404）。
+- 错误码形如 `QA-1013`：前缀 = 上下文，首位数字 = 异常族（`1xxx`→422 业务规则、`2xxx`→409 冲突、`3xxx`→403 禁止、`4xxx`→404 未找到）。新增前先 grep 避免重号。
 - 不提交 `target/`、`node_modules/`、`.idea/`、`.env`、密钥。
 - 提交前先本地跑对应模块的测试，不要用 CI 代替自检。
 

@@ -1,4 +1,4 @@
-# CampusOverflow · 学生初始框架（Java / Spring Boot 3）
+﻿# CampusOverflow · 学生初始框架（Java / Spring Boot 3）
 
 > **开发前先读 [docs/status.md](docs/status.md)**：当前批次、门禁是否通过、谁在做什么。
 > 团队约定见 `AGENTS.md`（本地文件，未提交到仓库）。
@@ -88,7 +88,7 @@ cd ../frontend && npm install && npm run dev      # http://localhost:5173
 
 1. `docs/adr/`：8 条架构决策记录——**为什么**这样设计比代码本身更重要；
 2. 《CampusOverflow 软件架构设计文档（arc42）》：第 5 章构建块视图、第 6 章运行时视图、第 10 章质量场景；
-3. `docs/错误码.md`：错误码分段与 HTTP 状态映射，实现领域异常时必须遵守。
+3. **错误码约定**：形如 `QA-1013`，前缀表示上下文（`QA-` / `REP-` / `DIS-` / `ID-` / `AUTH-` / `SYS-`），首位数字表示异常族：`1xxx`=业务规则 422、`2xxx`=冲突 409、`3xxx`=禁止 403、`4xxx`=未找到 404。已出现的错误码以代码中的异常消息为准（`docs/错误码对照表.md` 尚未建立）。
 
 ## 8. 常见坑
 
@@ -99,3 +99,5 @@ cd ../frontend && npm install && npm run dev      # http://localhost:5173
 | 中文搜索没结果 | 必须用 compose 里的 MySQL（已配置 `ngram_token_size=2`），自建库请对照参数 |
 | 事件重复导致加分两次 | 消费端必须幂等：账本唯一键 `(event_id, user_id, reason)` 或 `processed_event` 表 |
 | 提交后 CI 红 | 先本地跑 `mvn verify`，再推送；不要把红的分支合并到 `main` |
+
+> 环境版本、连接参数、哪些测试必须绿、如何拿教师账号、常见报错 → 见 **`docs/开发者须知.md`**。

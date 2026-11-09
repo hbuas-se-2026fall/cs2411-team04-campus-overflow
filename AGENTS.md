@@ -64,7 +64,7 @@
 2. **跨上下文只经 `*-api` 或集成事件**：不得 import 其他上下文的 `domain` / `application` 类。
 3. **写操作在 `@Transactional` 内**；事件在聚合保存**之后**、**同一事务**内发布（事务性发件箱）。
 4. **消费端必须幂等**：同一事件重复投递不得重复记账（账本唯一键 `(event_id, user_id, reason)`、`processed_event` 表、通知唯一键 `(source_event_id, recipient_id)`）。
-5. **错误码**：严格使用 `docs/错误码.md` 的约定（`QA-xxxx` / `REP-xxxx` / `DIS-xxxx` / `ID-xxxx` / `AUTH-xxxx`），异常类型与 HTTP 状态一一对应：`BusinessRule`→422、`Conflict`→409、`Forbidden`→403、`NotFound`→404。
+5. **错误码**：形如 `QA-1013`——前缀表示上下文（`QA-` / `REP-` / `DIS-` / `ID-` / `AUTH-` / `SYS-`），首位数字表示异常族：`1xxx`=业务规则 422、`2xxx`=冲突 409、`3xxx`=禁止 403、`4xxx`=未找到 404。新增错误码前先 `grep` 现有代码避免重号；已出现的码以代码为准（`docs/错误码对照表.md` 尚未建立，见 `docs/tech-debt.md`）。
 6. **计数器只用 `adjustXxx` 原子更新**，领域对象不回写 `score` / `answerCount` / `viewCount`。
 7. **渐进门禁只能「缩小运行范围」**，不得用 `-Dmaven.test.failure.ignore`、`@Disabled`、删测试来变绿。
 
