@@ -62,7 +62,7 @@ public class Answer {
     /** 教师认证：课程教师/助教为优质回答打上“教师认证”标记。 */
     public void endorse(Actor actor, boolean actorManagesCourse) {
         ensureNotDeleted();
-        if (!actor.isTeacherOrAdmin() || !actorManagesCourse) {
+        if (!actorManagesCourse) {
             throw new ForbiddenException("QA-3004", "只有课程管理者（教师/助教）可以认证回答");
         }
         if (this.endorsedBy != null) {

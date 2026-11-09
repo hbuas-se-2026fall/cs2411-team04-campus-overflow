@@ -48,7 +48,7 @@ public class Vote {
 
     private static int checkValue(int value) {
         if (value != 1 && value != -1) {
-            throw new BusinessRuleException("QA-1014", "投票值只能是 +1 或 -1，撤销投票请删除该票");
+            throw new BusinessRuleException("QA-1014", "投票值只能是 +1 或 -1（撤销由应用层删除记录实现）");
         }
         return value;
     }
