@@ -1,0 +1,61 @@
+# CampusOverflow · 登录 + 课程 冒烟脚本（IntelliJ HTTP Client 格式）
+#
+# 前置条件
+#   1) 后端在 http://127.0.0.1:8080 启动（dev profile）
+#   2) 库里至少有一门课；课程的 id 不是 1 时，改下面的 @courseId
+#
+# 换一个测试账号：改 @suffix 即可（同一个 suffix 再跑第 1 步会返回 409，属正常，直接走第 2 步）
+# 首次演示/截图前，请把 @suffix 改成没使用过的值（例如 日期+字母）
+#
+# 为什么没有 > {% %} 响应脚本？
+#   本项目的 CSRF 是「双提交 Cookie」：服务端只校验 请求头 X-XSRF-TOKEN 与 Cookie 里的
+#   XSRF-TOKEN 是否一致，而这两个值都由客户端提供。所以把同一个值（@xsrf）同时放进 Cookie
+#   头和请求头就能通过校验，不需要脚本去读响应。
+#   这样做的额外好处：不依赖 HTTP Client 的 JS 引擎（部分机器上该引擎会报
+#   "Object.defineProperty called on non-object"，连空脚本都执行不了）。
+#   注意：不能加 @no-cookie-jar —— 登录后的 SESSION Cookie 必须由 cookie jar 自动带上。
+
+@host = http://127.0.0.1:8080
+@xsrf = campus-smoke-token
+@suffix = 20261110a
+@courseId = 1
+
+### 0. 查看 CSRF（可选，只用来确认接口可用）
+GET {{host}}/api/v1/auth/csrf
+
+### 1. 注册（期望 201；已注册过则 409）
+POST {{host}}/api/v1/auth/register
+Content-Type: application/json
+Cookie: XSRF-TOKEN={{xsrf}}
+X-XSRF-TOKEN: {{xsrf}}
+
+{
+  "username": "auth{{suffix}}",
+  "displayName": "smoke{{suffix}}",
+  "email": "auth{{suffix}}@example.com",
+  "password": "SmokePass123",
+  "college": "计算机学院",
+  "className": "软工2401"
+}
+
+### 2. 登录（期望 200，并下发 SESSION Cookie）
+POST {{host}}/api/v1/auth/login
+Content-Type: application/json
+Cookie: XSRF-TOKEN={{xsrf}}
+X-XSRF-TOKEN: {{xsrf}}
+
+{
+  "username": "auth{{suffix}}",
+  "password": "SmokePass123"
+}
+
+### 3. 当前用户（期望 200）
+GET {{host}}/api/v1/auth/me
+
+### 4. 课程列表（期望 200）
+GET {{host}}/api/v1/courses
+
+### 5. 加入课程（期望 204）
+POST {{host}}/api/v1/courses/{{courseId}}/join
+Cookie: XSRF-TOKEN={{xsrf}}
+X-XSRF-TOKEN: {{xsrf}}
