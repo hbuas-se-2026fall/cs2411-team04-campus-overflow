@@ -1,7 +1,10 @@
-# W-01 等价冒烟脚本（PowerShell 7）
-# IntelliJ 2025.2 的 HTTP Client 响应脚本存在 Object.defineProperty 引擎 bug，
-# 此脚本用于提供可执行验证证据；auth.http 保留标准 IntelliJ 格式。
-# 运行：pwsh -NoProfile -File http/auth-smoke.ps1
+﻿# W-01 等价冒烟脚本（Windows PowerShell 5.1 / PowerShell 7 均可运行）
+# 作用：不依赖 IDE 的 HTTP Client 脚本引擎，用真实 Set-Cookie 握手依次验证
+#   csrf → register → login → me → courses → join，作为 auth.http 的可执行证据。
+# 本文件必须保存为 UTF-8 with BOM：否则 Windows PowerShell 5.1 会按 ANSI(GBK) 读中文，
+#   出现「哈希文本不完整 / 字符串缺少终止符」之类解析错误。
+# 运行（5.1）：powershell -NoProfile -ExecutionPolicy Bypass -File http\auth-smoke.ps1
+# 运行（7）  ：pwsh -NoProfile -File http/auth-smoke.ps1
 
 $ErrorActionPreference = 'Stop'
 
@@ -41,7 +44,11 @@ function Invoke-Api {
     Invoke-RestMethod @params
 }
 
-$first = Invoke-RestMethod -Uri "$base/api/v1/auth/csrf" -SessionVariable session
+try {
+    $first = Invoke-RestMethod -Uri "$base/api/v1/auth/csrf" -SessionVariable session
+} catch {
+    throw "无法连接 $base —— 请先启动后端（dev profile）。原始错误：$($_.Exception.Message)"
+}
 $csrf = ($session.Cookies.GetCookies($base) | Where-Object Name -eq 'XSRF-TOKEN').Value
 Write-Host "[0] CSRF 200"
 
