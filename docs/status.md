@@ -1,20 +1,20 @@
 # 项目进度总览
 
 > **维护人：只有 PO 修改这一页**，其他人只读。
-> 最后更新：2026-11-06
+> 最后更新：2026-11-09
 > 各成员的细节在 `docs/progress/<GitHub用户名>.md`，本页只做汇总。如果用户还没告诉你他的github用户名，让他告诉你(强制他保证正确)。
 > 规则见 `docs/progress/README.md`(你作为ai必须认真读)。
 
 ## 当前阶段
 
-第 1 批 · 进行中
+第 2 批 · 进行中
 
 ## 批次与门禁
 
 | 批次 | 解锁条件 | 状态 |
 | --- | --- | --- |
-| 1 | 无（现在就能开） | 进行中 |
-| 2 | Q&A 领域测试全绿 + 分支保护已开 | 未开始 |
+| 1 | 无（现在就能开） | ✅ 已完成（2026-11-09） |
+| 2 | Q&A 领域测试全绿 + 分支保护已开 | 进行中 |
 | 3 | 应用层测试绿 | 未开始 |
 | 4 | Q&A 闭环可演示 | 未开始 |
 | 5 | 端到端可跑 | 未开始 |
@@ -23,10 +23,10 @@
 
 | 成员 | 当前任务 | 状态 | 详见 |
 | --- | --- | --- | --- |
-| PO（Bugmageddon） | 仓库设置、分支保护、进度看板 | 已完成 | `docs/progress/bugmageddon.md` |
-| 代一鸣（qwerbnmv） | 未开始 | — | `docs/progress/qwerbnmv.md` |
-| 谢守航（kl1h） | 未开始 | — | `docs/progress/kl1h.md` |
-| 王子昂（Tourbillion-ANG） | 未开始 | — | `docs/progress/tourbillion-ang.md` |
+| PO（Bugmageddon） | CI 覆盖 co-qa-domain；`#9` 边界测试 | 进行中 | `docs/progress/bugmageddon.md` |
+| 代一鸣（qwerbnmv） | `#6` 已完成，待认领批次 2 命令服务 | 已完成 | `docs/progress/qwerbnmv.md` |
+| 谢守航（kl1h） | `#7`/`#8` 已完成，待认领批次 2 | 已完成 | `docs/progress/kl1h.md` |
+| 王子昂（Tourbillion-ANG） | `#11`/`#12`/`#13` 均未开始 | 未开始 | `docs/progress/tourbillion-ang.md` |
 
 ## 已完成
 
@@ -34,13 +34,15 @@
 - 默认分支改为 `develop`
 - 分支保护：`main`、`develop` 禁止直接推送与强推
 - 进度看板建立（本页 + 各成员页）
-- CI 改为渐进式质量门禁（ADR-009）：S0 只跑共享内核与 Identity
+- CI 改为渐进式质量门禁（ADR-009）
 - 项目看板：https://github.com/orgs/hbuas-se-2026fall/projects/23
 - 批次 1 的 10 张任务卡已建（#4–#13），模板与团队约定已就位
+- **批次 1 完成**：Q&A 领域层 6 个类全部实现，`co-qa-domain` 21/21 测试全绿（#4–#8 已合并）
+- **CI 覆盖范围加入 `co-qa/co-qa-domain`**：领域层改坏会立刻红灯
 
 ## 进行中
 
-- 环境跑通（JDK 21 / Maven / 本机 MySQL / Redis）
+- 批次 2：Q&A 应用层（三个命令服务 + 查询服务 + 行走骨架）
 
 ## 卡住的
 
