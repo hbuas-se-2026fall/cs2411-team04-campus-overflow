@@ -3,6 +3,7 @@ package com.campusoverflow.qa.domain;
 import com.campusoverflow.shared.domain.BusinessRuleException;
 import com.campusoverflow.shared.domain.ConflictException;
 import com.campusoverflow.shared.domain.ForbiddenException;
+import com.campusoverflow.shared.domain.Guard;
 import com.campusoverflow.shared.security.Actor;
 import java.time.Instant;
 import java.util.Objects;
@@ -75,16 +76,33 @@ public class Question {
         if (!actor.is(authorId) && !actorManagesCourse) {
             throw new ForbiddenException("QA-3002", "只有提问者或课程管理者可以编辑该问题");
         }
-        this.title = Objects.requireNonNull(newTitle);
-        this.body = Objects.requireNonNull(newBody);
-        this.tags = Objects.requireNonNull(newTags);
+        this.title = Guard.requireNonNull(newTitle, "QA-1001", "标题");
+        this.body = Guard.requireNonNull(newBody, "QA-1002", "问题正文");
+        this.tags = Guard.requireNonNull(newTags, "QA-1005", "标签");
         this.updatedAt = now;
     }
 
-    /** 采纳最佳答案。 */
+    /**
+     * 采纳最佳答案——全项目最关键的领域规则。
+     * 只有提问者或课程管理者可以采纳（QA-3001）；一个问题只能采纳一次（QA-2002）；
+     * 被采纳的回答必须属于本题（QA-1010）且未删除（QA-1011）；已删除的问题不能再采纳（QA-1020）。
+     * “是否被采纳”只由 Question.acceptedAnswerId 记录，Answer 侧不重复存储。
+     */
     public void accept(Answer answer, Actor actor, boolean actorManagesCourse) {
-        // TODO(S2)：实现 Question.accept——参考领域单元测试与 arc42 文档中的业务规则
-        throw new UnsupportedOperationException("TODO(S2)：Question.accept 尚未实现");
+        ensureNotDeleted();
+        if (!actor.is(authorId) && !actorManagesCourse) {
+            throw new ForbiddenException("QA-3001", "只有提问者或课程教师/助教可以采纳");
+        }
+        if (acceptedAnswerId != null) {
+            throw new ConflictException("QA-2002", "问题已采纳，不能重复采纳");
+        }
+        if (answer.questionId() != id) {
+            throw new BusinessRuleException("QA-1010", "答案不属于该问题");
+        }
+        if (answer.isDeleted()) {
+            throw new BusinessRuleException("QA-1011", "已删除的回答不能被采纳");
+        }
+        this.acceptedAnswerId = answer.id();
     }
 
     /**
