@@ -14,6 +14,9 @@
 1. **更新本人**的 `docs/progress/<用户名>.md`（改别人文件或改 `docs/status.md` 都是错的）。
 2. 提醒用户：PR 里要勾选「已更新 progress」。
 3. 更新内容包含：当前任务、状态（进行中/待评审/已完成/卡住）、卡在哪、下一步。
+4. 提醒用户设置 PR 右侧栏 4 项：Labels（`ctx:*` + `layer:*`）、Milestone（当前 Sprint）、Assignees（自己）、Reviewers（≥1 名非作者）。
+5. 提醒用户：**Projects 一栏保持 None** —— 看板只放 Issue，PR 挂进去会让看板被代码提交淹没。
+6. **提醒用户不要手动关 Issue** —— 只能由 PR 合并（`Closes #N`）自动关闭；手动关会让看板卡片永远卡在「待评审」。
 
 ## 红线（违反会被 PR 拒绝）
 
