@@ -1,7 +1,7 @@
 # CampusOverflow · 项目约定（AGENTS.md）
 
 > 本文件**提交到仓库**，任何人和任何 AI 助手都应先读它。
-> **本文件是规则主文件**；`CLAUDE.md`、`.github/copilot-instructions.md` 等是精简入口，细节以本文件为准。
+> **本文件是唯一的 AI 规则文件**（团队统一用 DeepSeek Harness 与 Kimi，不再维护其他工具的入口）。
 > 修改本文件必须走 PR。
 
 ## 1. 项目是什么
@@ -64,7 +64,7 @@
 2. **跨上下文只经 `*-api` 或集成事件**：不得 import 其他上下文的 `domain` / `application` 类。
 3. **写操作在 `@Transactional` 内**；事件在聚合保存**之后**、**同一事务**内发布（事务性发件箱）。
 4. **消费端必须幂等**：同一事件重复投递不得重复记账（账本唯一键 `(event_id, user_id, reason)`、`processed_event` 表、通知唯一键 `(source_event_id, recipient_id)`）。
-5. **错误码**：严格使用 `docs/错误码.md` 的约定（`QA-xxxx` / `REP-xxxx` / `DIS-xxxx` / `ID-xxxx` / `AUTH-xxxx`），异常类型与 HTTP 状态一一对应：`BusinessRule`→422、`Conflict`→409、`Forbidden`→403、`NotFound`→404。
+5. **错误码**：形如 `QA-1013`——前缀表示上下文（`QA-` / `REP-` / `DIS-` / `ID-` / `AUTH-` / `SYS-`），首位数字表示异常族：`1xxx`=业务规则 422、`2xxx`=冲突 409、`3xxx`=禁止 403、`4xxx`=未找到 404。新增错误码前先 `grep` 现有代码避免重号；已出现的码以代码为准（`docs/错误码对照表.md` 尚未建立，见 `docs/tech-debt.md`）。
 6. **计数器只用 `adjustXxx` 原子更新**，领域对象不回写 `score` / `answerCount` / `viewCount`。
 7. **渐进门禁只能「缩小运行范围」**，不得用 `-Dmaven.test.failure.ignore`、`@Disabled`、删测试来变绿。
 
@@ -97,11 +97,11 @@
 | `docs/status.md` | 进度总览（只有 PO 改） |
 | `docs/progress/` | 每人一份进度（本人改） |
 | `docs/team-agreement.md` | DoR / DoD / 评审归属 / 红线 |
-| `docs/issue-batch1/` | 批次 1 的 10 张任务卡 |
 | `docs/adr/` | 架构决策记录 |
-| `docs/sprint0-收尾清单.md` | S0 缺口、未知项与决策记录 |
 | `docs/tech-debt.md` | **技术债与待办**：什么现在不能做、什么时候做 |
-| `CLAUDE.md` | 本文件的精简入口（供 Claude Code 等读取） |
+| `docs/开发者须知.md` | 环境版本、连接参数、哪些测试必须绿、教师账号、常见报错 |
+| `docs/git代理切换.md` | 宿舍直连 / 教室代理切换 |
+| `docs/archive/` | **历史参考，不再维护**：V2/V3 差异比对、逐 Sprint 分配方案 |
 
 ## 11. 为什么易变内容不放这里
 

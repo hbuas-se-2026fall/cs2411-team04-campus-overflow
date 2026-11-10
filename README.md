@@ -42,7 +42,7 @@ cd ../frontend && npm install && npm run dev      # http://localhost:5173
 
 ## 3. 怎么开始：跟着测试走
 
-1. 打开 `docs/学生任务清单.md`，里面列出了全部 107 个 `TODO` 方法及其所在文件。
+1. 找出待实现的方法：`grep -rn 'throw new UnsupportedOperationException("TODO' backend --include=*.java`（当前剩 **89 个**）。
 2. 从 Q&A 的领域层开始：`co-qa/co-qa-domain/src/test/java/.../QuestionTest.java` 就是规格说明。
 3. 运行单个测试类：`mvn test -pl co-qa/co-qa-domain -Dtest=QuestionTest`
 4. 红 → 绿 → 重构，逐个把测试变绿；再写应用层，让 `AnswerAndVoteServiceTest` 变绿。
@@ -57,8 +57,8 @@ cd ../frontend && npm install && npm run dev      # http://localhost:5173
 | --- | --- | --- | --- |
 | S0 | 1–2 | 跑通环境、读懂 Identity 参考实现与架构文档 | 无编码任务；提交环境验证截图与架构理解笔记 |
 | S1 | 3–6 | 身份与课程：读懂并**扩展** Identity（如选课审批、个人资料） | 在 Identity 上下文中自行设计增量需求 |
-| S2 | 7–10 | 问答核心：Q&A 上下文全部 TODO | `docs/学生任务清单.md` 中标记 **S2** 的 36 个方法 |
-| S3 | 11–13 | 声誉与发现：Reputation + Discovery 上下文全部 TODO | 标记 **S3** 的 71 个方法 |
+| S2 | 7–10 | 问答核心：Q&A 上下文全部 TODO | `co-qa` 下所有 `TODO(S2)` 方法 |
+| S3 | 11–13 | 声誉与发现：Reputation + Discovery 上下文全部 TODO | `co-reputation`、`co-discovery` 下所有 `TODO(S3)` 方法 |
 | S4 | 14–15 | 打磨：性能、可观测性、前端体验、演示准备 | 第 6 节的增强任务 + 压测与指标 |
 
 ## 5. 验收门槛（对应课程考核）
@@ -88,7 +88,7 @@ cd ../frontend && npm install && npm run dev      # http://localhost:5173
 
 1. `docs/adr/`：8 条架构决策记录——**为什么**这样设计比代码本身更重要；
 2. 《CampusOverflow 软件架构设计文档（arc42）》：第 5 章构建块视图、第 6 章运行时视图、第 10 章质量场景；
-3. `docs/错误码.md`：错误码分段与 HTTP 状态映射，实现领域异常时必须遵守。
+3. **错误码约定**：形如 `QA-1013`，前缀表示上下文（`QA-` / `REP-` / `DIS-` / `ID-` / `AUTH-` / `SYS-`），首位数字表示异常族：`1xxx`=业务规则 422、`2xxx`=冲突 409、`3xxx`=禁止 403、`4xxx`=未找到 404。已出现的错误码以代码中的异常消息为准（`docs/错误码对照表.md` 尚未建立）。
 
 ## 8. 常见坑
 
@@ -99,3 +99,5 @@ cd ../frontend && npm install && npm run dev      # http://localhost:5173
 | 中文搜索没结果 | 必须用 compose 里的 MySQL（已配置 `ngram_token_size=2`），自建库请对照参数 |
 | 事件重复导致加分两次 | 消费端必须幂等：账本唯一键 `(event_id, user_id, reason)` 或 `processed_event` 表 |
 | 提交后 CI 红 | 先本地跑 `mvn verify`，再推送；不要把红的分支合并到 `main` |
+
+> 环境版本、连接参数、哪些测试必须绿、如何拿教师账号、常见报错 → 见 **`docs/开发者须知.md`**。

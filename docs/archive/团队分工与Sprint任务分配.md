@@ -17,7 +17,7 @@
 | 每个 Sprint 末 | `main` 打标签 v0.1.0 / v0.2.0 / v0.3.0 / v0.9.0 / v1.0.0，评审会现场从标签启动演示 |
 | 考核权重 | Sprint 评审 40% + 最终产品答辩 25% + 工程质量 20% + 过程协作 15%，个人成绩 = 团队成绩 × 贡献系数(0.6–1.2) |
 
-**⚠️ 第一个坑：编号错位。** 代码里的 `TODO(Sx)` 和 `docs/学生任务清单.md` 沿用 README 的 15 周旧编号，V3 把 8 周重排了：
+**⚠️ 第一个坑：编号错位。** 代码里的 `TODO(Sx)` 和 `docs/学生任务清单.md`（已删除，改用 `grep -rn 'throw new UnsupportedOperationException("TODO' backend --include=*.java` 查找）沿用 README 的 15 周旧编号，V3 把 8 周重排了：
 
 | 代码/清单里的标签 | 实际属于 | 周次 | 方法数 | 你该建的 Milestone |
 | --- | --- | --- | --- | --- |
