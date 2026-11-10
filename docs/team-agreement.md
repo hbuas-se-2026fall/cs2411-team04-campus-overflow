@@ -1,7 +1,7 @@
 # 团队约定
 
 > 建立于 2026-11-06。修改走 PR。
-> 配套：`docs/status.md`（进度总览）、`docs/progress/`（个人进度）、`CLAUDE.md`（给 AI 的约定）。
+> 配套：`docs/status.md`（进度总览）、`docs/progress/`（个人进度）、`AGENTS.md`（给 AI 与人的统一约定）。
 
 ## 1. 角色
 

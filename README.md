@@ -1,4 +1,4 @@
-﻿# CampusOverflow · 学生初始框架（Java / Spring Boot 3）
+# CampusOverflow · 学生初始框架（Java / Spring Boot 3）
 
 > **开发前先读 [docs/status.md](docs/status.md)**：当前批次、门禁是否通过、谁在做什么。
 > 团队约定见 `AGENTS.md`（本地文件，未提交到仓库）。
@@ -42,7 +42,7 @@ cd ../frontend && npm install && npm run dev      # http://localhost:5173
 
 ## 3. 怎么开始：跟着测试走
 
-1. 打开 `docs/学生任务清单.md`，里面列出了全部 107 个 `TODO` 方法及其所在文件。
+1. 找出待实现的方法：`grep -rn "TODO(S" backend --include=*.java`（当前剩 **89 个**）。
 2. 从 Q&A 的领域层开始：`co-qa/co-qa-domain/src/test/java/.../QuestionTest.java` 就是规格说明。
 3. 运行单个测试类：`mvn test -pl co-qa/co-qa-domain -Dtest=QuestionTest`
 4. 红 → 绿 → 重构，逐个把测试变绿；再写应用层，让 `AnswerAndVoteServiceTest` 变绿。
@@ -57,8 +57,8 @@ cd ../frontend && npm install && npm run dev      # http://localhost:5173
 | --- | --- | --- | --- |
 | S0 | 1–2 | 跑通环境、读懂 Identity 参考实现与架构文档 | 无编码任务；提交环境验证截图与架构理解笔记 |
 | S1 | 3–6 | 身份与课程：读懂并**扩展** Identity（如选课审批、个人资料） | 在 Identity 上下文中自行设计增量需求 |
-| S2 | 7–10 | 问答核心：Q&A 上下文全部 TODO | `docs/学生任务清单.md` 中标记 **S2** 的 36 个方法 |
-| S3 | 11–13 | 声誉与发现：Reputation + Discovery 上下文全部 TODO | 标记 **S3** 的 71 个方法 |
+| S2 | 7–10 | 问答核心：Q&A 上下文全部 TODO | `co-qa` 下所有 `TODO(S2)` 方法 |
+| S3 | 11–13 | 声誉与发现：Reputation + Discovery 上下文全部 TODO | `co-reputation`、`co-discovery` 下所有 `TODO(S3)` 方法 |
 | S4 | 14–15 | 打磨：性能、可观测性、前端体验、演示准备 | 第 6 节的增强任务 + 压测与指标 |
 
 ## 5. 验收门槛（对应课程考核）

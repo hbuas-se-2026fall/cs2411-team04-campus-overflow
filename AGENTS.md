@@ -1,7 +1,7 @@
 # CampusOverflow · 项目约定（AGENTS.md）
 
 > 本文件**提交到仓库**，任何人和任何 AI 助手都应先读它。
-> **本文件是规则主文件**；`CLAUDE.md`、`.github/copilot-instructions.md` 等是精简入口，细节以本文件为准。
+> **本文件是唯一的 AI 规则文件**（团队统一用 DeepSeek Harness 与 Kimi，不再维护其他工具的入口）。
 > 修改本文件必须走 PR。
 
 ## 1. 项目是什么
@@ -97,11 +97,11 @@
 | `docs/status.md` | 进度总览（只有 PO 改） |
 | `docs/progress/` | 每人一份进度（本人改） |
 | `docs/team-agreement.md` | DoR / DoD / 评审归属 / 红线 |
-| `docs/issue-batch1/` | 批次 1 的 10 张任务卡 |
 | `docs/adr/` | 架构决策记录 |
-| `docs/sprint0-收尾清单.md` | S0 缺口、未知项与决策记录 |
 | `docs/tech-debt.md` | **技术债与待办**：什么现在不能做、什么时候做 |
-| `CLAUDE.md` | 本文件的精简入口（供 Claude Code 等读取） |
+| `docs/开发者须知.md` | 环境版本、连接参数、哪些测试必须绿、教师账号、常见报错 |
+| `docs/git代理切换.md` | 宿舍直连 / 教室代理切换 |
+| `docs/archive/` | **历史参考，不再维护**：V2/V3 差异比对、逐 Sprint 分配方案 |
 
 ## 11. 为什么易变内容不放这里
 
