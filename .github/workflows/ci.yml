@@ -144,7 +144,7 @@ jobs:
             echo "已更新 ${TARGET}，通过。"
           else
             echo "未更新 ${TARGET}。"
-            echo "按 CLAUDE.md 第 2 节：完成任务的 PR 必须更新本人的 docs/progress/<用户名>.md。"
+            echo "按 AGENTS.md 第 5 节：完成任务的 PR 必须更新本人的 docs/progress/<用户名>.md。"
             exit 1
           fi
 

@@ -42,7 +42,7 @@ cd ../frontend && npm install && npm run dev      # http://localhost:5173
 
 ## 3. 怎么开始：跟着测试走
 
-1. 找出待实现的方法：`grep -rn "TODO(S" backend --include=*.java`（当前剩 **89 个**）。
+1. 找出待实现的方法：`grep -rn 'throw new UnsupportedOperationException("TODO' backend --include=*.java`（当前剩 **89 个**）。
 2. 从 Q&A 的领域层开始：`co-qa/co-qa-domain/src/test/java/.../QuestionTest.java` 就是规格说明。
 3. 运行单个测试类：`mvn test -pl co-qa/co-qa-domain -Dtest=QuestionTest`
 4. 红 → 绿 → 重构，逐个把测试变绿；再写应用层，让 `AnswerAndVoteServiceTest` 变绿。
