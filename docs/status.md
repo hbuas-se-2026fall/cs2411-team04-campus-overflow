@@ -11,12 +11,13 @@
 
 - 批次 1 已关闭（2026-11-09），`co-qa-domain` **53/53 全绿**
 - 批次 2 的 **9 张任务卡（#24–#32）已全部建好**，挂在 `Sprint 2` 里程碑
-- **#27 已完成并提交 PR #33**（谢守航，`AnswerCommandService` 7 个方法），等待评审合并
-- 剩余待实现方法：**89 个**（Discovery 32 / Reputation 39 / Q&A 18）
+- **#27 已合并**（谢守航，PR #33，2026-11-12）——`AnswerCommandService` 7 个方法全部落地，Q&A 剩余 11 个方法
+- 剩余待实现方法：**82 个**（Discovery 32 / Reputation 39 / Q&A 11）
 
 ### 2026-11-12 事件记录
 
 - **CI 停摆已修复**：11-12 起所有 job 秒挂（`steps=0`，注释 `The job was not started because recent account payments have failed...`），原因是组织额度/账单，不是代码问题。仓库从 private 改为 **public** 后 CI 恢复（`run 43141289402` attempt 3：后端 58 秒 / 前端 20 秒 / 进度检查 6 秒，全部 success）
+- **#27 已合并**：PR #33（谢守航）评审通过并合并，合并提交 `cdb2b2c`，Issue #27 由 PR 自动关闭。`AnswerCommandService` 7 个方法全部落地，Q&A 应用层剩余 11 个
 - **Issue 事实性错误已修正**：#24（补充 23 处 = 20 个 `@EventListener` + 3 个私有辅助）、#28（`JdbcQaReadModel` 真实路径在 `infrastructure/query/` 而非 `persistence/`）、#31（discovery SQL 真实路径、`deleted_at` 只有 2 个字段而非 5 处、`@ArchTest` 是 8 个而非 10 个；ADR-006 标题改为「问题与回答软删除，投票撤销即删除」）
 
 ## 批次与门禁
