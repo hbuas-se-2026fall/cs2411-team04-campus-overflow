@@ -1,10 +1,16 @@
 # 谢守航（kl1h）的进度
 
-最后更新：2026-11-09
-当前任务：[T1-04] Answer 聚合 + [T1-05] Vote 与 Comment 领域规则（批次 1，Issue #7、#8）
-状态：待评审（PR #18，已按 PO 评审意见修改一轮）
+最后更新：2026-11-12
+当前任务：[T2-03] AnswerCommandService：7 个方法（批次 2，Issue #27）
+状态：待评审
 卡在哪：无
-下一步：等待 PR #18 合并，合并后认领批次 2 的命令服务任务
+下一步：等待 PR 合并，然后从 Ready 认领 #29（T2-05）或 #28（T2-04）
+
+## 2026-11-12
+
+- 完成 #27 `AnswerCommandService` 全部 7 个方法（`submit`/`edit`/`delete`/`accept`/`endorse` + `loadQuestion`/`loadAnswer`）：计数器原子增量、缓存失效恰好 1 次、采纳与认证写审计、按任务卡发布 4 类集成事件（`ContentDeletedEvent.targetType` 实为 `String`，传 `TargetType.ANSWER.name()`）
+- 验证：`AnswerAndVoteServiceTest` 中 `submitAnswerPublishesEventAndBumpsCounter` 与 `onlyAskerOrCourseManagerCanAccept` 变绿（另 2 个失败属 `VoteService` 卡，不在本卡范围）；领域测试 53/53 绿；`ArchitectureTest` 通过
+- PR #18（#7、#8）已于 2026-11-09 合并 ✅
 
 ## 2026-11-09
 
