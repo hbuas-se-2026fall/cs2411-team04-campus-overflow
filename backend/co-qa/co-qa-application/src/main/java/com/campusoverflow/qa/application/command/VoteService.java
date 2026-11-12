@@ -8,7 +8,6 @@ import com.campusoverflow.qa.domain.QuestionRepository;
 import com.campusoverflow.qa.domain.TargetType;
 import com.campusoverflow.qa.domain.Vote;
 import com.campusoverflow.qa.domain.VoteRepository;
-import com.campusoverflow.shared.domain.BusinessRuleException;
 import com.campusoverflow.shared.domain.NotFoundException;
 import com.campusoverflow.shared.event.EventIds;
 import com.campusoverflow.shared.event.IntegrationEventPublisher;
