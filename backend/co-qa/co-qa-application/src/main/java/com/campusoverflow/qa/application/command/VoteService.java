@@ -48,12 +48,65 @@ public class VoteService {
 
     @Transactional
     public VoteResult cast(Actor actor, TargetType type, long targetId, int value) {
-        // TODO(S2)：实现 VoteService.cast——参考领域单元测试与 arc42 文档中的业务规则
-        throw new UnsupportedOperationException("TODO(S2)：VoteService.cast 尚未实现");
+        Target target = resolve(type, targetId);
+        Optional<Vote> existing = votes.find(actor.userId(), type, targetId);
+        int oldValue = existing.map(Vote::value).orElse(0);
+
+        if (value == 0) {
+            // 撤销：领域对象只接受 ±1，撤销只能删记录
+            if (existing.isEmpty()) {
+                return new VoteResult(0, 0);
+            }
+            votes.delete(existing.get());
+            applyScore(type, targetId, -oldValue);
+            publish(actor, type, targetId, target, oldValue, 0);
+            return new VoteResult(0, -oldValue);
+        }
+
+        if (existing.isEmpty()) {
+            votes.save(Vote.cast(actor.userId(), target.authorId(), type, targetId, value, clock.instant()));
+            applyScore(type, targetId, value);
+            publish(actor, type, targetId, target, 0, value);
+            return new VoteResult(value, value);
+        }
+
+        if (oldValue == value) {
+            // 幂等：重复投同一票既不写库也不发事件，否则声誉会被重复结算
+            return new VoteResult(value, 0);
+        }
+
+        existing.get().change(value, clock.instant());
+        votes.save(existing.get());
+        applyScore(type, targetId, value - oldValue);
+        publish(actor, type, targetId, target, oldValue, value);
+        return new VoteResult(value, value - oldValue);
     }
 
     private Target resolve(TargetType type, long targetId) {
-        // TODO(S2)：实现 VoteService.resolve——参考领域单元测试与 arc42 文档中的业务规则
-        throw new UnsupportedOperationException("TODO(S2)：VoteService.resolve 尚未实现");
+        if (type == TargetType.QUESTION) {
+            Question question = questions.findById(targetId)
+                    .orElseThrow(() -> new NotFoundException("QA-4001", "问题不存在：" + targetId));
+            return new Target(question.authorId(), question.id());
+        }
+        Answer answer = answers.findById(targetId)
+                .orElseThrow(() -> new NotFoundException("QA-4002", "回答不存在：" + targetId));
+        return new Target(answer.authorId(), answer.questionId());
+    }
+
+    /** 计数器必须原子增量维护，不能读出来再写回去（AGENTS.md 技术红线第 4 条）。 */
+    private void applyScore(TargetType type, long targetId, int delta) {
+        if (delta == 0) {
+            return;
+        }
+        if (type == TargetType.QUESTION) {
+            questions.adjustScore(targetId, delta);
+        } else {
+            answers.adjustScore(targetId, delta);
+        }
+    }
+
+    private void publish(Actor actor, TargetType type, long targetId, Target target, int oldValue, int newValue) {
+        events.publish(new VoteCastEvent(EventIds.next(), clock.instant(), type.name(), targetId,
+                target.authorId(), actor.userId(), target.questionId(), oldValue, newValue));
     }
 }
