@@ -193,12 +193,12 @@ class QuestionCommandServiceTest {
     }
 
     @Test
-    @DisplayName("不存在的问题：编辑与删除都报 QA-1010")
+    @DisplayName("不存在的问题：编辑与删除都报 QA-4001")
     void missingQuestionIsRejected() {
         assertThatThrownBy(() -> service.edit(ming, 999L,
                 new EditQuestionCommand("换个标题试试看这个能不能改", "随便改点正文内容吧，反正这段文字够长能通过校验。", List.of("数据结构"))))
                 .isInstanceOf(NotFoundException.class);
-        assertThat(codeOf(() -> service.delete(ming, 999L))).isEqualTo("QA-1010");
+        assertThat(codeOf(() -> service.delete(ming, 999L))).isEqualTo("QA-4001");
     }
 
     /** 记录每次 {@code adjustUsage} 的增量，便于断言「谁加了谁减了」。 */

@@ -103,7 +103,7 @@ public class QuestionCommandService {
 
     private Question load(long questionId) {
         return questions.findById(questionId)
-                .orElseThrow(() -> new NotFoundException("QA-1010", "问题不存在：" + questionId));
+                .orElseThrow(() -> new NotFoundException("QA-4001", "问题不存在：" + questionId));
     }
 
     /** 只对真正变化的标签调整使用量：移除的 -1、新增的 +1，两边都有的不动。 */
