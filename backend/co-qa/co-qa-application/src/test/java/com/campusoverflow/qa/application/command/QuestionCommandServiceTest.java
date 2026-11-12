@@ -118,7 +118,8 @@ class QuestionCommandServiceTest {
         String longBody = "红".repeat(5000);
         service.post(ming, postCommand("一个足够长的问题标题", longBody, List.of("数据结构")));
 
-        assertThat(renderer.lastMaxLength).isEqualTo(QuestionCommandService.PLAIN_TEXT_FOR_INDEX);
+        // 写死 2000 而不是引用 PLAIN_TEXT_FOR_INDEX：否则断言「常量等于它自己」，常量一改也不会红
+        assertThat(renderer.lastMaxLength).isEqualTo(2000);
     }
 
     @Test

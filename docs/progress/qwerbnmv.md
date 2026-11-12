@@ -14,8 +14,9 @@
   - `post`：`Question.post` → `questions.save`（仓储内部 assignId）→ 发 `QuestionPostedEvent` → `tags.adjustUsage(+1)` → `listCache.invalidateAll()` → 审计 `QUESTION_POSTED`
   - `edit`：先记旧标签集合，`question.edit` 后按差集调整（移除 -1、新增 +1、两边都有不动），避免未变标签重复计数
   - `delete`：`question.softDelete` → 发 `ContentDeletedEvent`（`targetType = QUESTION`）→ `tags.adjustUsage(-1)` → 审计 `QUESTION_DELETED`
-  - `load`：`questions.findById().orElseThrow(new NotFoundException("QA-1010", ...))`
-  - 新增 `QuestionCommandServiceTest`（8 个用例）：事件字段、缓存失效次数、标签增量（含编辑差集）、审计动作、`QA-3002` 陌生人编辑、`QA-1013` 有回答删除、`QA-1010` 不存在、摘要截断长度
+  - `load`：`questions.findById().orElseThrow(new NotFoundException("QA-4001", ...))`
+  - 新增 `QuestionCommandServiceTest`（8 个用例）：事件字段、缓存失效次数、标签增量（含编辑差集）、审计动作、`QA-3002` 陌生人编辑、`QA-1013` 有回答删除、`QA-4001` 不存在、摘要截断长度
+  - 错误码说明：`QA-4001`（问题不存在，NotFound 404）而非 `QA-1010`——后者已被领域层 `Question.java:102` 占用为「答案不属于该问题」（BusinessRule 422），同一个码不能有两种语义
   - `mvn test -pl co-qa/co-qa-application -am`：`QuestionCommandServiceTest` **8 tests, 0F, 0E**；该模块整体仍 1F/1E，均来自 `AnswerAndVoteServiceTest`（等 `#26` VoteService）
   - `ArchitectureTest` 通过（1/1）
 
