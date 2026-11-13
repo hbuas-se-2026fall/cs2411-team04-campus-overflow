@@ -7,7 +7,7 @@
 下一步：
 - `#24` 的 PR #40 等 PO Approve 后合并
 - `#26` T2-02 VoteService 已合并（PR #37），`co-qa-application` 17 个测试全绿
-- `#24` 合并后 Sprint 2 里程碑（Q&A 应用层 18 个方法）达成
+- `#24` 合并后，Q&A 应用层还剩 5 个 TODO（`QuestionQueryService` 3、`CommentService` 1、`QaQueryApiImpl` 1），对应 #28 / #29，由 kl1h 负责
 
 ## 已完成
 
