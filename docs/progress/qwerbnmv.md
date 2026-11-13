@@ -13,7 +13,7 @@
 - **2026-11-12**：`#26` 实现 `VoteService.cast` / `resolve`
   - `cast` 五分支：撤销（`value == 0`，无旧票则空操作、有则 `votes.delete` + `adjustScore(-oldValue)`）、新增投票、幂等（`oldValue == value` 时不写库不发事件）、改投（`change` + `adjustScore(value - oldValue)`）、自投由 `Vote.cast` 抛 `QA-1015`
   - `resolve`：`QUESTION` → 查 `questions`，`ANSWER` → 查 `answers`；不存在分别抛 `QA-4001` / `QA-4002`
-  - `applyScore` 私有方法：`delta == 0` 直接返回，其余走 `questions.adjustScore` / `answers.adjustScore` 原子增量（AGENTS.md 红线第 4 条）
+  - `applyScore` 私有方法：`delta == 0` 直接返回，其余走 `questions.adjustScore` / `answers.adjustScore` 原子增量（AGENTS.md 技术红线第 6 条）
   - `publish` 私有方法：统一发 `VoteCastEvent`（携带 `oldValue` / `newValue`，下游据此算声誉增量）
   - `mvn test -pl co-qa/co-qa-application -am`：**12 tests, 0 Failures, 0 Errors**（`AnswerAndVoteServiceTest` 4/4 全绿 + `QuestionCommandServiceTest` 8/8）
   - `ArchitectureTest` 通过（1/1）

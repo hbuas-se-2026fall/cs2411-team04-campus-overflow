@@ -15,6 +15,7 @@
 | A5 | 安装 Docker（WSL2 也未装） | 本机 MySQL/Redis 够用 | S2 集成测试前（Testcontainers 需要）| 待办 |
 | A6 | 删除 `legacy` 与 `docs/team-charter` 旧分支 | 保留着可以回溯旧代码，无成本 | 项目结束时清理 | 待办 |
 | A7 | **提交 `frontend/package-lock.json`**（当前无锁文件，`package.json` 用 `^` 范围，每次 CI 都装当时最新版） | 生成锁文件要本地跑 `npm install`；现在不改也能跑 | Sprint 4 收尾 | 待办（见 B4） |
+| A8 | **已软删除的问题/回答仍可被投票**：`VoteService.resolve` 只查存在性，不检查 `isDeleted()`；`QuestionRepositoryAdapter.findById` 也不过滤 `deleted_at`。后果是别人能给已删除内容投票，进而给作者刷声誉 | 任何文档都没定义这条规则，`#26` 卡面也没要求，属既有缺口；且要等声誉领域（批次 4）真正消费 `VoteCastEvent` 才有实际危害 | Sprint 4 做声誉记账时一并处理（可在 `resolve` 里加 `isDeleted()` 判断抛 `QA-1020`） | 待办 |
 
 ## B. 待验证的未知项
 

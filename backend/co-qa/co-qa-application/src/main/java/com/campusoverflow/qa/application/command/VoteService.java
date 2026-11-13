@@ -92,7 +92,7 @@ public class VoteService {
         return new Target(answer.authorId(), answer.questionId());
     }
 
-    /** 计数器必须原子增量维护，不能读出来再写回去（AGENTS.md 技术红线第 4 条）。 */
+    /** 计数器必须原子增量维护，不能读出来再写回去（AGENTS.md 技术红线第 6 条）。 */
     private void applyScore(TargetType type, long targetId, int delta) {
         if (delta == 0) {
             return;
