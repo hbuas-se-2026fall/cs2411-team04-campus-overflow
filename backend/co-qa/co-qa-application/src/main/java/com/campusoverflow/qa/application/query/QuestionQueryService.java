@@ -77,7 +77,7 @@ public class QuestionQueryService {
     /** 问题详情：一次装配问题、回答、评论、课程与权限；作者信息一次批量查避免 N+1。 */
     public QuestionDetailView detail(long questionId, Actor actorOrNull) {
         QuestionRow q = readModel.findQuestion(questionId)
-                .orElseThrow(() -> new NotFoundException("QA-1010", "问题不存在：" + questionId));
+                .orElseThrow(() -> new NotFoundException("QA-4001", "问题不存在：" + questionId));
 
         // 浏览计数：先写 Redis，定时批量落库（不阻塞读路径）
         viewCounter.increment(questionId);

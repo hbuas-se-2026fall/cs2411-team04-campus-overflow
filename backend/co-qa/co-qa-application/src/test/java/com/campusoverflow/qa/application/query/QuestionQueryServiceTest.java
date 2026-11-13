@@ -96,12 +96,12 @@ class QuestionQueryServiceTest {
     }
 
     @Test
-    @DisplayName("详情：问题不存在抛 QA-1010，且不产生浏览计数")
+    @DisplayName("详情：问题不存在抛 QA-4001，且不产生浏览计数")
     void detailThrowsWhenQuestionMissing() {
         assertThatThrownBy(() -> service.detail(999L, ming))
                 .isInstanceOf(NotFoundException.class)
                 .extracting(e -> ((NotFoundException) e).code())
-                .isEqualTo("QA-1010");
+                .isEqualTo("QA-4001");
         assertThat(viewCounter.ids).isEmpty();
     }
 
