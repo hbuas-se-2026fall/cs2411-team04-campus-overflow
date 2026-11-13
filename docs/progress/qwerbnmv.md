@@ -1,14 +1,24 @@
 # 代一鸣（qwerbnmv）的进度
 
-最后更新：2026-11-12
-当前任务：`#25` T2-01 QuestionCommandService 四个方法 + 新增测试（批次 2）
+最后更新：2026-11-13
+当前任务：`#24` T2-00 三个下游监听器改空实现（批次 2）
 状态：待评审
 卡在哪：无
 下一步：
-- 开 PR（`Closes #25`），等 PO Approve 后合并
-- 合并后接 `#26` T2-02 VoteService，做完 `co-qa-application` 门禁即达成
+- 开 PR（`Closes #24`），等 PO Approve 后合并
+- `#26` T2-02 VoteService 的 PR #37 也在等评审，两张卡都合并后 Sprint 2 门禁达成
 
 ## 已完成
+
+- **2026-11-13**：`#24` 把三个下游监听器改为空实现（23 个方法）
+  - `ReputationEventHandlers`（5 个 `on(...)`）、`NotificationProjector`（6 个 `on(...)` + `notify` + `name`）、`SearchIndexProjector`（9 个 `on(...)` + `firstTime`）
+  - 每个方法体由 `throw new UnsupportedOperationException("TODO(S3)")` 改为一行 `log.debug(...)`，`@EventListener` / `@Transactional` / 方法签名全部保留，`// TODO(S3)` 注释改成具体实现要点方便 Sprint 3 找回
+  - 动机：`OutboxRelay.dispatch()` 捕获异常后 `failed.increment()` 并按指数退避推后 `locked_until`，超 10 次进死信。`#25` 的 `QuestionCommandService.post` 已经在发 `QuestionPostedEvent`，任何一次提问都会撞上这三个监听器然后阻塞整条事件链
+  - 两个模块的 `pom.xml` 各补一条 `slf4j-api`（版本由 Spring Boot 父 POM 管理），否则编译报「程序包 org.slf4j 不存在」
+  - 三个文件 `UnsupportedOperationException` 归零；`mvn -B -o -f backend/pom.xml compile -DskipTests` BUILD SUCCESS（27 模块）
+  - `mvn test -pl co-qa/co-qa-application -am`：12 tests，1F/1E。该 1F/1E 与本卡无关——本分支尚未合并 `#26`，`VoteService.cast` 仍是 TODO；已用 `git stash` 在干净 develop 上复现同样的 1F/1E
+  - `ArchitectureTest` 通过（1/1）
+  - 说明：Issue 验收标准写的「`grep backend/co-reputation backend/co-discovery` 输出为空」在当前 develop 上不可达成，除本卡三个文件外还有 26 处其他类的 Sprint 3 TODO，需 Sprint 3 全部实现后才清零
 
 - **2026-11-12**：`#25` 实现 `QuestionCommandService` 的 `post` / `edit` / `delete` / `load`
   - `post`：`Question.post` → `questions.save`（仓储内部 assignId）→ 发 `QuestionPostedEvent` → `tags.adjustUsage(+1)` → `listCache.invalidateAll()` → 审计 `QUESTION_POSTED`
