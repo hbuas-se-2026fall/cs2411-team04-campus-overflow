@@ -4,7 +4,7 @@
 当前任务：`#28` T2-04 QuestionQueryService + `#29` T2-05 CommentService / QaQueryApiImpl（批次 2）
 状态：待评审
 卡在哪：无
-下一步：开 PR（`Closes #28`、`Closes #29`），等 PO Approve 后合并；合并后从 Ready 拉 `#30` 之前先看 PO 的 CI 卡
+下一步：等 #37 合并与评审通过后，合并 [PR #38](https://github.com/hbuas-se-2026fall/cs2411-team04-campus-overflow/pull/38)（#28）和 [PR #39](https://github.com/hbuas-se-2026fall/cs2411-team04-campus-overflow/pull/39)（#29）；随后从 Ready 拉下一张非 PO 卡
 
 ## 2026-11-13
 
