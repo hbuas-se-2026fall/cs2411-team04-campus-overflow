@@ -60,11 +60,11 @@ public class CommentService {
     private long resolveQuestionId(PostCommentCommand cmd) {
         if (cmd.targetType() == TargetType.QUESTION) {
             Question question = questions.findById(cmd.targetId())
-                    .orElseThrow(() -> new NotFoundException("QA-1010", "问题不存在：" + cmd.targetId()));
+                    .orElseThrow(() -> new NotFoundException("QA-4001", "问题不存在：" + cmd.targetId()));
             return question.id();
         }
         Answer answer = answers.findById(cmd.targetId())
-                .orElseThrow(() -> new NotFoundException("QA-1011", "回答不存在：" + cmd.targetId()));
+                .orElseThrow(() -> new NotFoundException("QA-4002", "回答不存在：" + cmd.targetId()));
         return answer.questionId();
     }
 }

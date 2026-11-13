@@ -120,18 +120,18 @@ class CommentServiceTest {
     }
 
     @Test
-    @DisplayName("目标不存在：问题 QA-1010 / 回答 QA-1011")
+    @DisplayName("目标不存在：问题 QA-4001 / 回答 QA-4002")
     void missingTargetIsNotFound() {
         assertThatThrownBy(() -> service.post(ming,
                 new PostCommentCommand(TargetType.QUESTION, 999L, null, "评论不存在的问题")))
                 .isInstanceOf(NotFoundException.class)
                 .extracting(e -> ((DomainException) e).code())
-                .isEqualTo("QA-1010");
+                .isEqualTo("QA-4001");
 
         assertThatThrownBy(() -> service.post(ming,
                 new PostCommentCommand(TargetType.ANSWER, 999L, null, "评论不存在的回答")))
                 .isInstanceOf(NotFoundException.class)
                 .extracting(e -> ((DomainException) e).code())
-                .isEqualTo("QA-1011");
+                .isEqualTo("QA-4002");
     }
 }
