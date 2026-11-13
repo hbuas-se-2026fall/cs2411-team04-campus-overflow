@@ -47,6 +47,7 @@ class VoteServiceTest {
     private final Actor hong = new Actor(2, "小红", Role.STUDENT);
 
     private VoteService voteService;
+    private long questionId;
     private long answerId;
 
     @BeforeEach
@@ -55,6 +56,7 @@ class VoteServiceTest {
         Question q = questions.save(Question.post(ming.userId(), 100L, new Title("红黑树插入后为什么必须旋转？"),
                 MarkdownBody.ofQuestion("变色为什么不够？希望有直观解释，最好能给出一个反例。"),
                 Tags.of(List.of("数据结构", "红黑树")), NOW));
+        questionId = q.id();
         Answer a = answers.save(Answer.submit(q, hong.userId(),
                 MarkdownBody.ofAnswer("关键在于黑高这个不变量，仅靠变色无法调整。"), NOW));
         answerId = a.id();
@@ -94,8 +96,8 @@ class VoteServiceTest {
     }
 
     @Test
-    @DisplayName("撤销：已有踩时分值回滚 +2，因为增量是 -(-1)")
-    void revokingDownvoteRevertsScoreByPlusTwo() {
+    @DisplayName("撤销：已有踩时分值回滚 +1，因为增量是 -(-1)")
+    void revokingDownvoteRevertsScoreByPlusOne() {
         voteService.cast(ming, TargetType.ANSWER, answerId, -1);
         VoteService.VoteResult result = voteService.cast(ming, TargetType.ANSWER, answerId, 0);
 
@@ -120,5 +122,29 @@ class VoteServiceTest {
         assertThat(voteEvents).hasSize(3);
         assertThat(voteEvents.get(2).oldValue()).isZero();
         assertThat(voteEvents.get(2).newValue()).isEqualTo(1);
+    }
+
+    @Test
+    @DisplayName("撤销：对问题投票同样生效，走 resolve 的 QUESTION 分支与 questions.adjustScore")
+    void revokingQuestionVoteUsesQuestionBranch() {
+        // 问题由 ming 发布，所以必须由 hong 投，否则撞自投校验 QA-1015
+        voteService.cast(hong, TargetType.QUESTION, questionId, 1);
+        VoteService.VoteResult result = voteService.cast(hong, TargetType.QUESTION, questionId, 0);
+
+        assertThat(result.myVote()).isZero();
+        assertThat(result.scoreDelta()).isEqualTo(-1);
+        assertThat(votes.find(hong.userId(), TargetType.QUESTION, questionId)).isEmpty();
+        // 走的是 questions.adjustScore，不是 answers.adjustScore
+        assertThat(questions.scoreDeltas).containsEntry(questionId, 0);
+        assertThat(answers.scoreDeltas).doesNotContainKey(answerId);
+
+        List<VoteCastEvent> voteEvents = events.ofType(VoteCastEvent.class);
+        assertThat(voteEvents).hasSize(2);
+        assertThat(voteEvents.get(1).targetType()).isEqualTo("QUESTION");
+        assertThat(voteEvents.get(1).targetId()).isEqualTo(questionId);
+        assertThat(voteEvents.get(1).targetAuthorId()).isEqualTo(ming.userId());
+        assertThat(voteEvents.get(1).voterId()).isEqualTo(hong.userId());
+        assertThat(voteEvents.get(1).oldValue()).isEqualTo(1);
+        assertThat(voteEvents.get(1).newValue()).isZero();
     }
 }
