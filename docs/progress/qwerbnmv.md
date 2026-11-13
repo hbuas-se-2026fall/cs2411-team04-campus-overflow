@@ -1,16 +1,24 @@
 # 代一鸣（qwerbnmv）的进度
 
 最后更新：2026-11-12
-当前任务：`#25` T2-01 QuestionCommandService 四个方法 + 新增测试（批次 2）
+当前任务：`#26` T2-02 VoteService 投票 / 改投 / 撤销（批次 2）
 状态：待评审
 卡在哪：无
 下一步：
-- 开 PR（`Closes #25`），等 PO Approve 后合并
-- 合并后接 `#26` T2-02 VoteService，做完 `co-qa-application` 门禁即达成
+- 开 PR（`Closes #26`），等 PO Approve 后合并
+- 合并后 `co-qa-application` 门禁（`AnswerAndVoteServiceTest` 全绿）达成，接 `#24` T2-00
 
 ## 已完成
 
-- **2026-11-12**：`#25` 实现 `QuestionCommandService` 的 `post` / `edit` / `delete` / `load`
+- **2026-11-12**：`#26` 实现 `VoteService.cast` / `resolve`
+  - `cast` 五分支：撤销（`value == 0`，无旧票则空操作、有则 `votes.delete` + `adjustScore(-oldValue)`）、新增投票、幂等（`oldValue == value` 时不写库不发事件）、改投（`change` + `adjustScore(value - oldValue)`）、自投由 `Vote.cast` 抛 `QA-1015`
+  - `resolve`：`QUESTION` → 查 `questions`，`ANSWER` → 查 `answers`；不存在分别抛 `QA-4001` / `QA-4002`
+  - `applyScore` 私有方法：`delta == 0` 直接返回，其余走 `questions.adjustScore` / `answers.adjustScore` 原子增量（AGENTS.md 技术红线第 6 条）
+  - `publish` 私有方法：统一发 `VoteCastEvent`（携带 `oldValue` / `newValue`，下游据此算声誉增量）
+  - `mvn test -pl co-qa/co-qa-application -am`：**12 tests, 0 Failures, 0 Errors**（`AnswerAndVoteServiceTest` 4/4 全绿 + `QuestionCommandServiceTest` 8/8）
+  - `ArchitectureTest` 通过（1/1）
+
+- **2026-11-12**：`#25` 实现 `QuestionCommandService` 的 `post` / `edit` / `delete` / `load`（已合并，PR #36）
   - `post`：`Question.post` → `questions.save`（仓储内部 assignId）→ 发 `QuestionPostedEvent` → `tags.adjustUsage(+1)` → `listCache.invalidateAll()` → 审计 `QUESTION_POSTED`
   - `edit`：先记旧标签集合，`question.edit` 后按差集调整（移除 -1、新增 +1、两边都有不动），避免未变标签重复计数
   - `delete`：`question.softDelete` → 发 `ContentDeletedEvent`（`targetType = QUESTION`）→ `tags.adjustUsage(-1)` → 审计 `QUESTION_DELETED`
