@@ -20,6 +20,7 @@ import com.campusoverflow.qa.domain.Tags;
 import com.campusoverflow.qa.domain.Title;
 import com.campusoverflow.shared.domain.BusinessRuleException;
 import com.campusoverflow.shared.domain.ForbiddenException;
+import com.campusoverflow.shared.domain.NotFoundException;
 import com.campusoverflow.shared.security.Actor;
 import com.campusoverflow.shared.security.Role;
 import java.time.Clock;
@@ -113,5 +114,19 @@ class AnswerAndVoteServiceTest {
     void cannotVoteOnOwnContent() {
         assertThatThrownBy(() -> voteService.cast(ming, TargetType.QUESTION, questionId, 1))
                 .isInstanceOf(BusinessRuleException.class);
+    }
+
+    @Test
+    @DisplayName("回答命令：问题或回答不存在时使用统一 404 错误码")
+    void missingContentUsesUnifiedNotFoundCodes() {
+        assertThatThrownBy(() -> answerService.submit(hong, 999L, "提交给一个不存在的问题。"))
+                .isInstanceOf(NotFoundException.class)
+                .extracting(e -> ((NotFoundException) e).code())
+                .isEqualTo("QA-4001");
+
+        assertThatThrownBy(() -> answerService.edit(hong, 999L, "编辑一个不存在的回答。"))
+                .isInstanceOf(NotFoundException.class)
+                .extracting(e -> ((NotFoundException) e).code())
+                .isEqualTo("QA-4002");
     }
 }

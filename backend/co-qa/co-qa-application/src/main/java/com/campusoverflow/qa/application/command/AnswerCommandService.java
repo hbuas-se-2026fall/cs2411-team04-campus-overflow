@@ -107,11 +107,11 @@ public class AnswerCommandService {
 
     private Question loadQuestion(long id) {
         return questions.findById(id)
-                .orElseThrow(() -> new NotFoundException("QA-1010", "问题不存在：" + id));
+                .orElseThrow(() -> new NotFoundException("QA-4001", "问题不存在：" + id));
     }
 
     private Answer loadAnswer(long id) {
         return answers.findById(id)
-                .orElseThrow(() -> new NotFoundException("QA-1011", "回答不存在：" + id));
+                .orElseThrow(() -> new NotFoundException("QA-4002", "回答不存在：" + id));
     }
 }
