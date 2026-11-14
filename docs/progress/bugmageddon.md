@@ -1,13 +1,13 @@
 # PO（Bugmageddon）的进度
 
-最后更新：2026-11-12
-当前任务：`#30` CI 纳入 `co-qa-application`（等待 #25–#29 全合并）
-状态：等待
+最后更新：2026-11-14
+当前任务：`#30` CI 纳入 `co-qa-application`（已提 PR）
+状态：待评审合并
 卡在哪：无
 下一步：
-- 评审并合并 PR #33（`#27`，谢守航）
-- 催三位开发把 `Ready` 卡的拖到 `进行中`
-- 等 `#25–#29` 合并后做 `#30`
+- 等 `#30` 的 PR 评审通过后合并，Sprint 2 里程碑随之关闭
+- 评审并合并 PR #41（`#31`，王子昂）
+- 催王子昂开工 `#32`（错误码对照表，他手上最后一张）
 
 ## 已完成
 
@@ -26,4 +26,6 @@
 - **2026-11-11**：建批次 2 的 9 张任务卡（#24–#32）并分配到人，全部挂 `Sprint 2` 里程碑
 - **2026-11-12**：**修复 CI 全面停摆**。现象：11-12 起所有 job `steps=0`、3 秒内失败，注释为 `The job was not started because recent account payments have failed or your spending limit needs to be increased`。定位：不是代码/配置问题，是私有仓库 + 组织额度/账单（同组织 public 仓库 team08 的 CI 正常）。核对用量：team04 从 11-01 至今 154 个 job、累计 63.49 分钟，远未触及 3000 分钟额度；组织下 20 个私有仓库、97 个席位共享额度。处理：仓库改为 public 后 CI 恢复，`run 43141289402` attempt 3 全绿（后端 58s / 前端 20s / 进度检查 6s）
 - **2026-11-12**：核实两位成员提出的问题。谢守航的 CI 诊断成立，但他有 3 处误判（① 误以为 PO 是组织 Owner——实为 member，Owner 只有 `BostonMIT`；② 误以为 3000 分钟被本队跑光——实际 63.49 分钟；③ 不必等 CI 恢复才能合并——`protect-develop` 规则集没有 `required_status_checks`）。王子昂对 #31 的 3 条核查全部成立
-- **2026-11-12**：修正 3 张 Issue 的事实性错误 —— #24 补充方法数口径（23 处 = 20 个 `@EventListener` + 3 个私有辅助，与卡面「23 个方法」吻合，原先误记为 25 处）；#28 修正 `JdbcQaReadModel` 路径（`infrastructure/query/` 而非 `persistence/`）；#31 修正 discovery SQL 路径、`deleted_at` 字段数（2 个而非「5 处」，第 17/18/48 行是索引）、`@ArchTest` 个数（8 个而非 10 个），并把 ADR-006 标题改为「问题与回答软删除，投票撤销即删除」（评论无删除路径、投票撤销即物理删除）
+- **2026-11-14**：**批次 2 主体完成，Q&A 应用层 TODO 归零**。`co-qa-application` 测试从 4 个涨到 **35 个全绿**（`AnswerAndVoteServiceTest` 5 / `CommentServiceTest` 5 / `QuestionCommandServiceTest` 8 / `VoteServiceTest` 5 / `QaQueryApiImplTest` 3 / `QuestionQueryServiceTest` 9）。9 张卡已合并 7 张（#24–#30），剩 #31（PR #41 待合并）、#32（未开工）。全仓库剩余 `UnsupportedOperationException` **48 个**：Reputation 34 / Discovery 14 / Q&A 0
+- **2026-11-14**：**`#30` CI 纳入 `co-qa-application`**。`.github/workflows/ci.yml` 的 `SPRINT_MODULES` 追加 `co-qa/co-qa-application`，同步更新第 23–26 行注释（批次编号与 `AGENTS.md` 第 9 节对齐）。此前后端 job 的「单元测试（Sprint 范围）」与「覆盖率门禁」两步根本不跑 application 模块的 35 个测试。已核对 `co-qa-application/pom.xml` 未声明 jacoco `check`，加入后不会因覆盖率阈值变红
+
