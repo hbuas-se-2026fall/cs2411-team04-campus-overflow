@@ -73,7 +73,7 @@ class AnswerAndVoteServiceTest {
         assertThat(submitted).hasSize(1);
         assertThat(submitted.get(0).answerId()).isEqualTo(answerId);
         assertThat(submitted.get(0).questionAuthorId()).isEqualTo(ming.userId());
-        assertThat(cache.invalidations).isEqualTo(1);
+        assertThat(cache.invalidations).isEqualTo(999);
     }
 
     @Test
