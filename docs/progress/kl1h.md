@@ -1,10 +1,10 @@
 # 谢守航（kl1h）的进度
 
 最后更新：2026-11-14
-当前任务：#42 AnswerCommandService 未找到错误码修复（#27 回归）
-状态：待评审
+当前任务：`#29` T2-05 CommentService / QaQueryApiImpl（批次 2）
+状态：待 PO / 技术负责人合并
 卡在哪：无
-下一步：等待修复 PR 的非作者审批；#28 / #29 仍按原顺序评审合并
+下一步：[PR #39](https://github.com/hbuas-se-2026fall/cs2411-team04-campus-overflow/pull/39) 合并最新 `develop` 并通过 CI 后，由 PO / 技术负责人合并；本人不自行合并
 
 ## 2026-11-14
 

@@ -35,9 +35,36 @@ public class CommentService {
         this.clock = clock;
     }
 
+    /**
+     * 发表评论或二级回复。业务校验（正文 2–600 字、只能回复顶层评论、父子须挂同一对象）全在领域层，
+     * 这里只解析问题 id（评论总是挂在问题下，即使目标是一条回答）并发出站事件。
+     */
     @Transactional
     public long post(Actor actor, PostCommentCommand cmd) {
-        // TODO(S2)：实现 CommentService.post——参考领域单元测试与 arc42 文档中的业务规则
-        throw new UnsupportedOperationException("TODO(S2)：CommentService.post 尚未实现");
+        long questionId = resolveQuestionId(cmd);
+
+        Comment parent = cmd.parentId() == null ? null
+                : comments.findById(cmd.parentId())
+                        .orElseThrow(() -> new NotFoundException("QA-1018", "父评论不存在：" + cmd.parentId()));
+
+        Comment comment = Comment.post(cmd.targetType(), cmd.targetId(), questionId, actor.userId(), parent,
+                cmd.body(), clock.instant());
+        Comment saved = comments.save(comment);
+
+        events.publish(new CommentPostedEvent(EventIds.next(), clock.instant(), saved.id(), questionId,
+                actor.userId(), cmd.body()));
+
+        return saved.id();
+    }
+
+    private long resolveQuestionId(PostCommentCommand cmd) {
+        if (cmd.targetType() == TargetType.QUESTION) {
+            Question question = questions.findById(cmd.targetId())
+                    .orElseThrow(() -> new NotFoundException("QA-4001", "问题不存在：" + cmd.targetId()));
+            return question.id();
+        }
+        Answer answer = answers.findById(cmd.targetId())
+                .orElseThrow(() -> new NotFoundException("QA-4002", "回答不存在：" + cmd.targetId()));
+        return answer.questionId();
     }
 }
