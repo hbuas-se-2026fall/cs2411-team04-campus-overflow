@@ -199,21 +199,32 @@ public final class QaTestFixtures {
         }
     }
 
+    /** 计数型缓存替身：既记录调用次数，也真的存值，便于验证 Cache-Aside 的命中行为。 */
     public static class CountingCache implements QuestionListCache {
+        private final Map<String, PageResult<QuestionSummaryView>> store = new HashMap<>();
+        public int gets;
+        public int puts;
         public int invalidations;
 
         @Override
         public Optional<PageResult<QuestionSummaryView>> get(Long courseId, PageRequest page) {
-            return Optional.empty();
+            gets++;
+            return Optional.ofNullable(store.get(key(courseId, page)));
         }
 
         @Override
         public void put(Long courseId, PageRequest page, PageResult<QuestionSummaryView> value) {
+            puts++;
+            store.put(key(courseId, page), value);
         }
 
         @Override
         public void invalidateAll() {
             invalidations++;
+        }
+
+        private static String key(Long courseId, PageRequest page) {
+            return courseId + ":" + page.page() + ":" + page.size();
         }
     }
 

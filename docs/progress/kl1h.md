@@ -1,10 +1,16 @@
 # 谢守航（kl1h）的进度
 
-最后更新：2026-11-13
-当前任务：`#28` T2-04 QuestionQueryService + `#29` T2-05 CommentService / QaQueryApiImpl（批次 2）
-状态：待评审
+最后更新：2026-11-14
+当前任务：`#29` T2-05 CommentService / QaQueryApiImpl（批次 2）
+状态：待 PO / 技术负责人合并
 卡在哪：无
-下一步：等 #37 合并与评审通过后，合并 [PR #38](https://github.com/hbuas-se-2026fall/cs2411-team04-campus-overflow/pull/38)（#28）和 [PR #39](https://github.com/hbuas-se-2026fall/cs2411-team04-campus-overflow/pull/39)（#29）；随后从 Ready 拉下一张非 PO 卡
+下一步：[PR #39](https://github.com/hbuas-se-2026fall/cs2411-team04-campus-overflow/pull/39) 合并最新 `develop` 并通过 CI 后，由 PO / 技术负责人合并；本人不自行合并
+
+## 2026-11-14
+
+- 修复 #42（#27 回归）：`AnswerCommandService.loadQuestion` 的 404 错误码由 `QA-1010` 改为 `QA-4001`，`loadAnswer` 由 `QA-1011` 改为 `QA-4002`，与问题 / 投票 / 查询 / 评论服务保持一致。
+- 在 `AnswerAndVoteServiceTest` 新增 1 个回归用例，分别锁定问题不存在与回答不存在的错误码；未修改任何已有测试断言，领域层 `QA-1010/QA-1011` 的 422 业务语义保持不变。
+- 验证：应用层 **18/18**、领域层 **53/53**、`AnswerAndVoteServiceTest` **5/5**、`ArchitectureTest` **1/1** 全部通过。
 
 ## 2026-11-13
 
