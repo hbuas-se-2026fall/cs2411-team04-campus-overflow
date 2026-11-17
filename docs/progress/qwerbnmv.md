@@ -1,15 +1,28 @@
 # 代一鸣（qwerbnmv）的进度
 
 最后更新：2026-11-17
-当前任务：`#45` T3-01 ReputationAccount 7 个方法 + ReputationRulebook 4 个方法（批次 3）
+当前任务：`#46` T3-02 徽章与学期键 5 个方法 + ReputationEventHandlers 5 个事件真正记账（批次 3）
 状态：待评审
 卡在哪：无
 下一步：
-- `#45` 的 PR 等 PO Approve 后合并
-- `#45` 合并后立刻开 `#46` T3-02（徽章与学期键 5 个方法 + `ReputationEventHandlers` 5 个事件真正记账），它依赖本卡的 `applyReputation` / `freezePoints` / `voteDelta` / `applyDailyCap`
-- `#47`（Bounty + BountyService）与 `#48`（声誉查询 + 排行榜 + 对账）都等 `#45`，由 kl1h 负责
+- `#46` 的 PR 等 PO Approve 后合并
+- `#46` 合并后本批我的卡已做完（`#45`、`#46`），批次 3 剩余卡 `#47` / `#48` 由 kl1h 负责，`#49` / `#50` 由 PO 负责，`#51` / `#32` 由王子昂负责
+- `co-reputation-domain` 目前仍有 3 个红（`BountyAndAccountTest` 的 3 个用例），全部卡在 `Bounty.open`，属 `#47`（kl1h）范围；`co-reputation-application` 14 个测试全绿
 
 ## 已完成
+
+- **2026-11-17**：`#46` 实现徽章与学期键 5 个方法 + 5 个事件处理器真正记账
+  - `AcademicTerm`：`termKey`（2–7 月春季、8–12 月秋季，**次年 1 月仍属上一年秋季**，所以 `2027-01` → `2026-FALL`）、`weekKey`（用 `IsoFields.WEEK_BASED_YEAR` 而非日历年，否则跨年那一周会出错；补零到两位）、`monthKey`（补零）
+  - `BadgePolicy`：`forAcceptedCount`（≥1 授 `FIRST_ACCEPTED`、≥10 授 `HELPER_10`）、`forReputation`（≥100 授 `REPUTATION_100`、≥1000 授 `REPUTATION_1000`）；返回的是「此刻应持有的全部徽章」而非增量，配合 `grant` 幂等
+  - `BadgeService.grant`：`badges.has(userId, type)` 为真直接返回（不重复发事件）→ `badges.award(new BadgeAward(...))` → 发 `BadgeAwardedEvent(type.name(), type.displayName())`
+  - `ReputationEventHandlers` 5 个处理器：**开户**（账户已存在则忽略；初始积分是悬赏积分不进账本，否则破坏「声誉 = 流水之和」FF-8）、**采纳**（`acceptedDelta` → `record` → 用 `countByUserAndReason` 算采纳数 → `BadgePolicy.forAcceptedCount` 授徽章）、**投票**（`voteDelta(old, new)` → `delta > 0` 时用 `sumPositiveVoteDeltaSince(作者, UTC 当日零点)` 套每日上限 → 记账；reason 按 `targetType` 取 `QUESTION_VOTE` / `ANSWER_VOTE`）、**首个回答**、**教师认证**
+  - `VoteCastEvent.targetType` 用字面量 `"QUESTION"` / `"ANSWER"` 判断而非 import qa 的 `TargetType` 枚举——跨上下文只能走 `*-api`，而 `TargetType` 在 `co-qa-domain` 里
+  - 每日上限按 **UTC** 自然日（`ReputationRulebook` 类注释明确写「每人每个自然日（UTC）」），用 `LocalDate.ofInstant(clock.instant(), ZoneOffset.UTC).atStartOfDay()`
+  - **采纳结算的最后一步「悬赏结算」故意未调用**：`BountyService.settleOnAccept` 仍是 `TODO(S3)`（属 `#47`），现在调用会让每个 `AnswerAccepted` 事件抛异常、被 OutboxRelay 指数退避、十次后进死信，把整条声誉链堵死。已在方法内留 `// TODO(#47)` 标记，`bounties` 字段保持注入
+  - 新增 `ReputationEventHandlersTest`（14 个用例，全手写替身不启 Spring）：开户积分按角色、开户幂等不重置余额、采纳 +15、采纳幂等、自问自答 0 分不写流水、首个采纳授徽章、被赞 +10、问题维度用 `QUESTION_VOTE`、赞改踩 −12、每日上限削到 0、上限不影响踩、投票幂等、`FIRST_ANSWER` 不重复、`TEACHER_ENDORSED` 不重复
+  - 新增 `ReputationTestFixtures`（`InMemoryAccounts` / `InMemoryLedger` / `InMemoryBadges` / `RecordingEvents`）
+  - 测试：`co-reputation-application` **14 tests, 0F, 0E**（该模块此前一个测试都没有）；`BountyAndAccountTest` 的 `badgePolicyThresholds` 与 `academicTermKeysFollowCampusCalendar` 转绿；`ArchitectureTest` 1/1
+  - `co-reputation-domain` 从 5 红降到 **3 红**，剩余的 `onlyCourseManagerCanOpenBountyWithinLimits` / `bountyCanBeSettledOnlyOnce` / `sponsorCannotWinOwnBountyAndDueDetectionWorks` 全部卡在 `Bounty.open`，属 `#47`
 
 - **2026-11-17**：`#45` 实现 `ReputationAccount` 7 个方法 + `ReputationRulebook` 4 个方法
   - `ReputationAccount`：`open`（声誉 0、可用 = 开户积分、冻结 0、version 0，负数抛 `REP-1006`）、`applyReputation`（直接 `reputation += delta`，**故意不设下限截断**，否则破坏「余额 = 流水之和」的对账不变量 FF-8）、`freezePoints`（`requirePositive` → 余额不足抛 `REP-1002` → `available -= p; frozen += p`）、`spendFrozen`（`ensureFrozen` 后 `frozen -= p`）、`refundFrozen`（`ensureFrozen` 后 `frozen -= p; available += p`）、`ensureFrozen`、`requirePositive`
