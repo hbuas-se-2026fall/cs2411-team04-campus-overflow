@@ -25,9 +25,17 @@ public class BadgeService {
         this.clock = clock;
     }
 
+    /**
+     * 授予徽章。幂等：已持有该徽章时直接返回，不重复发事件——上游事件是「至少一次」投递，
+     * 同一事件重放会多次走到这里。
+     */
     @Transactional(propagation = Propagation.MANDATORY)
     public void grant(long userId, BadgeType type) {
-        // TODO(S3)：实现 BadgeService.grant——参考领域单元测试与 arc42 文档中的业务规则
-        throw new UnsupportedOperationException("TODO(S3)：BadgeService.grant 尚未实现");
+        if (badges.has(userId, type)) {
+            return;
+        }
+        badges.award(new BadgeAward(userId, type, clock.instant()));
+        events.publish(new BadgeAwardedEvent(EventIds.next(), clock.instant(), userId, type.name(),
+                type.displayName()));
     }
 }

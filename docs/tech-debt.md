@@ -15,7 +15,7 @@
 | A5 | 安装 Docker（WSL2 也未装） | 本机 MySQL/Redis 够用 | S2 集成测试前（Testcontainers 需要）| 待办 |
 | A6 | 删除 `legacy` 与 `docs/team-charter` 旧分支 | 保留着可以回溯旧代码，无成本 | 项目结束时清理 | 待办 |
 | A7 | **提交 `frontend/package-lock.json`**（当前无锁文件，`package.json` 用 `^` 范围，每次 CI 都装当时最新版） | 生成锁文件要本地跑 `npm install`；现在不改也能跑 | Sprint 4 收尾 | 待办（见 B4） |
-| A8 | **已软删除的问题/回答仍可被投票**：`VoteService.resolve` 只查存在性，不检查 `isDeleted()`；`QuestionRepositoryAdapter.findById` 也不过滤 `deleted_at`。后果是**投票这个动作本身没被拦住**——已删除内容照样写 `qa_vote` 表、照样发 `VoteCastEvent`。`ReputationAccount.applyReputation` 目前只是记账不消费事件，所以还看不出问题；等 `#46` 把 `ReputationEventHandlers.on(VoteCastEvent)` 实现成真正记账，这些事件就会被消费，声誉随之改变 | 任何文档都没定义这条规则，`#26` 卡面也没要求，属既有缺口 | `#46` 开工时必须修，**位置选 `VoteService.resolve`**：补 `isDeleted()` 判断并抛 `QA-1021`（`QA-1020` 已被 `Answer.java:89` / `Question.java:134` 占用为「内容已删除」，不能再复用）。这是唯一正确的修法——用户给已删除内容点赞，界面应该直接报错，而不是静默记一笔投票、再把声誉过滤掉。**不要在 `on(VoteCastEvent)` 里过滤**：那样投票照写进 `qa_vote` 表，只是声誉不变，脏数据留在库里，且 `qa_vote` 与 `ReputationAccount` 从此不一致 | 待办 |
+| A8 | **已软删除的问题/回答仍可被投票**（**已修**）：`VoteService.resolve` 原本只查存在性，不检查 `isDeleted()`；`QuestionRepositoryAdapter.findById` 也不过滤 `deleted_at` | 任何文档都没定义这条规则，`#26` 卡面也没要求，属既有缺口 | `#46` 已按方案 A 修完：`VoteService.resolve` 把 `isDeleted()` 带进 `Target.deleted`，`cast` 在 `value != 0` 时抛 `BusinessRuleException("QA-1021", "内容已删除，不能再投票")`。**撤销（`value == 0`）放行**——撤销走 `applyScore(-oldValue)` 的减分路径，拦住它会让用户删掉问题后那张票永远撤不回来，`qa_vote` 与 `ReputationAccount` 从此不一致。**没有**在 `on(VoteCastEvent)` 里过滤：那样投票照写进 `qa_vote` 表，只是声誉不变，脏数据留在库里 | 已完成 |
 
 ## B. 待验证的未知项
 
