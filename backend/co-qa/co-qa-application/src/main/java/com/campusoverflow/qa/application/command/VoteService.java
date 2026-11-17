@@ -8,6 +8,7 @@ import com.campusoverflow.qa.domain.QuestionRepository;
 import com.campusoverflow.qa.domain.TargetType;
 import com.campusoverflow.qa.domain.Vote;
 import com.campusoverflow.qa.domain.VoteRepository;
+import com.campusoverflow.shared.domain.BusinessRuleException;
 import com.campusoverflow.shared.domain.NotFoundException;
 import com.campusoverflow.shared.event.EventIds;
 import com.campusoverflow.shared.event.IntegrationEventPublisher;
@@ -20,6 +21,9 @@ import org.springframework.transaction.annotation.Transactional;
 /**
  * 用例：投票 / 改投 / 撤销（value ∈ {-1, 0, 1}，0 表示撤销）。
  * 发布的事件同时携带旧值与新值，下游据此计算声誉增量。
+ *
+ * <p>已删除的内容不接受新投票（{@code QA-1021}），但**放行撤销**：撤销走 {@code applyScore(-oldValue)}
+ * 的减分路径，拦住它会让用户删掉问题后那张票永远撤不回来，{@code qa_vote} 与声誉账户从此不一致。
  */
 @Service
 public class VoteService {
@@ -42,12 +46,15 @@ public class VoteService {
     public record VoteResult(int myVote, int scoreDelta) {
     }
 
-    private record Target(long authorId, long questionId) {
+    private record Target(long authorId, long questionId, boolean deleted) {
     }
 
     @Transactional
     public VoteResult cast(Actor actor, TargetType type, long targetId, int value) {
         Target target = resolve(type, targetId);
+        if (value != 0 && target.deleted()) {
+            throw new BusinessRuleException("QA-1021", "内容已删除，不能再投票");
+        }
         Optional<Vote> existing = votes.find(actor.userId(), type, targetId);
         int oldValue = existing.map(Vote::value).orElse(0);
 
@@ -85,11 +92,11 @@ public class VoteService {
         if (type == TargetType.QUESTION) {
             Question question = questions.findById(targetId)
                     .orElseThrow(() -> new NotFoundException("QA-4001", "问题不存在：" + targetId));
-            return new Target(question.authorId(), question.id());
+            return new Target(question.authorId(), question.id(), question.isDeleted());
         }
         Answer answer = answers.findById(targetId)
                 .orElseThrow(() -> new NotFoundException("QA-4002", "回答不存在：" + targetId));
-        return new Target(answer.authorId(), answer.questionId());
+        return new Target(answer.authorId(), answer.questionId(), answer.isDeleted());
     }
 
     /** 计数器必须原子增量维护，不能读出来再写回去（AGENTS.md 技术红线第 6 条）。 */

@@ -117,6 +117,33 @@ class AnswerAndVoteServiceTest {
     }
 
     @Test
+    @DisplayName("已删除的问题不能被投票：抛 QA-1021 且不写投票表")
+    void cannotVoteOnDeletedQuestion() {
+        Question q = questions.findById(questionId).orElseThrow();
+        q.softDelete(ming, false, NOW.plusSeconds(1)); // ming 是提问者，此时 answerCount = 0
+
+        assertThatThrownBy(() -> voteService.cast(hong, TargetType.QUESTION, questionId, 1))
+                .isInstanceOf(BusinessRuleException.class)
+                .extracting(e -> ((BusinessRuleException) e).code())
+                .isEqualTo("QA-1021");
+        assertThat(votes.find(hong.userId(), TargetType.QUESTION, questionId)).isEmpty();
+    }
+
+    @Test
+    @DisplayName("已删除的问题仍可撤销已有投票：不拦减分路径")
+    void canRevokeVoteOnDeletedQuestion() {
+        voteService.cast(hong, TargetType.QUESTION, questionId, 1);
+        Question q = questions.findById(questionId).orElseThrow();
+        q.softDelete(ming, false, NOW.plusSeconds(1));
+
+        VoteService.VoteResult result = voteService.cast(hong, TargetType.QUESTION, questionId, 0);
+
+        assertThat(result.myVote()).isZero();
+        assertThat(result.scoreDelta()).isEqualTo(-1);
+        assertThat(votes.find(hong.userId(), TargetType.QUESTION, questionId)).isEmpty();
+    }
+
+    @Test
     @DisplayName("回答命令：问题或回答不存在时使用统一 404 错误码")
     void missingContentUsesUnifiedNotFoundCodes() {
         assertThatThrownBy(() -> answerService.submit(hong, 999L, "提交给一个不存在的问题。"))
