@@ -1,15 +1,24 @@
 # 代一鸣（qwerbnmv）的进度
 
-最后更新：2026-11-13
-当前任务：`#24` T2-00 三个下游监听器改空实现（批次 2）
+最后更新：2026-11-17
+当前任务：`#45` T3-01 ReputationAccount 7 个方法 + ReputationRulebook 4 个方法（批次 3）
 状态：待评审
 卡在哪：无
 下一步：
-- `#24` 的 PR #40 等 PO Approve 后合并
-- `#26` T2-02 VoteService 已合并（PR #37），`co-qa-application` 17 个测试全绿
-- `#24` 合并后，Q&A 应用层还剩 5 个 TODO（`QuestionQueryService` 3、`CommentService` 1、`QaQueryApiImpl` 1），对应 #28 / #29，由 kl1h 负责
+- `#45` 的 PR 等 PO Approve 后合并
+- `#45` 合并后立刻开 `#46` T3-02（徽章与学期键 5 个方法 + `ReputationEventHandlers` 5 个事件真正记账），它依赖本卡的 `applyReputation` / `freezePoints` / `voteDelta` / `applyDailyCap`
+- `#47`（Bounty + BountyService）与 `#48`（声誉查询 + 排行榜 + 对账）都等 `#45`，由 kl1h 负责
 
 ## 已完成
+
+- **2026-11-17**：`#45` 实现 `ReputationAccount` 7 个方法 + `ReputationRulebook` 4 个方法
+  - `ReputationAccount`：`open`（声誉 0、可用 = 开户积分、冻结 0、version 0，负数抛 `REP-1006`）、`applyReputation`（直接 `reputation += delta`，**故意不设下限截断**，否则破坏「余额 = 流水之和」的对账不变量 FF-8）、`freezePoints`（`requirePositive` → 余额不足抛 `REP-1002` → `available -= p; frozen += p`）、`spendFrozen`（`ensureFrozen` 后 `frozen -= p`）、`refundFrozen`（`ensureFrozen` 后 `frozen -= p; available += p`）、`ensureFrozen`、`requirePositive`
+  - `ReputationRulebook`：`voteEffect`（1→+10、-1→-2、其余 0）、`voteDelta`（= `voteEffect(new) - voteEffect(old)`，改投撤销统一按差值算，避免历史票值被重复累加）、`applyDailyCap`（`delta <= 0` 原样返回，否则 `max(0, min(delta, 200 - gainedToday))`）、`initialPoints`（教师/管理员 1000、助教 500、学生 0）
+  - 两个钱包彼此独立：声誉只能通过账本流水变化，悬赏积分是另一套货币；不变量 `availablePoints >= 0` 且 `frozenPoints >= 0`
+  - `initialPoints(TA)` = 500 是**自选值**：指导书把 TA / ADMIN 的额度留给 PO 决定（建议 TA 500、ADMIN 1000），此处取建议值，待 PO 确认后可能需要落到 ADR
+  - 测试：`ReputationRulebookTest` **9 tests, 0F, 0E**（含 6 组参数化 `voteDelta`），`BountyAndAccountTest.freezeSpendAndRefundKeepPointsConsistent` 通过
+  - `co-reputation-domain` 整体从 14 红降到 **1F / 4E**，剩余 5 个全部属于 #46（徽章 / 学期键）与 #47（悬赏），不是本卡范围
+  - `ArchitectureTest` 通过（1/1）
 
 - **2026-11-13**：`#26` 按 PO 评审意见补强（已合并，PR #37）
   - 修正 `VoteService.java:95` 与本文档中的红线编号：「第 4 条」→「第 6 条」（计数器只用 `adjustXxx` 原子更新）
