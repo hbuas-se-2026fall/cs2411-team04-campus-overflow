@@ -1,10 +1,21 @@
 # 谢守航（kl1h）的进度
 
-最后更新：2026-11-14
-当前任务：`#29` T2-05 CommentService / QaQueryApiImpl（批次 2）
-状态：待 PO / 技术负责人合并
-卡在哪：无
-下一步：[PR #39](https://github.com/hbuas-se-2026fall/cs2411-team04-campus-overflow/pull/39) 合并最新 `develop` 并通过 CI 后，由 PO / 技术负责人合并；本人不自行合并
+最后更新：2026-11-18
+当前任务：`#48` T3-04 声誉查询 / 排行榜 / 每日对账（Sprint 3）
+状态：待 PO / 技术负责人评审
+卡在哪：无；#47 仍在独立 PR 中待评审
+下一步：PR 通过 CI 与评审后，由 PO / 技术负责人合并；本人不自行合并
+
+## 2026-11-18
+
+- 完成 #48（T3-04）7 个应用方法：
+  - `ReputationQueryService` 实现声誉档案、徽章与流水查询，积分仅本人 / 管理员可见，流水仅本人 / 管理员可查并映射中文原因。
+  - `ReputationApiImpl` 实现单人与批量声誉查询；无账户返回 0，批量结果省略缺失用户。
+  - `LeaderboardService` 实现事件幂等与排行榜装配；周 / 月 / 学期榜走 Redis，`ALL` 总榜按既有设计读取账户表，昵称批量查询，排名从 1 开始。
+  - `ReconciliationService` 实现账户声誉与流水总和的每日对账。
+- 新增 `ReputationReadServicesTest` **8 个用例**，覆盖任务卡 7 项验收及 `ALL` 总榜回归；未修改任何已有测试断言。
+- 验证：本卡 **8/8**、既有 `ReputationEventHandlersTest` **14/14**，应用层合计 **22/22**；`ArchitectureTest` **1/1** 通过。
+- 基线说明：完整 `-am` 命令会先遇到 `develop` 上 #47 尚未实现的 3 个 `Bounty` 领域红测试；本卡未改动该任务，按渐进门禁定向运行本卡与既有应用层测试，未忽略失败、未删除测试或添加 `@Disabled`。
 
 ## 2026-11-14
 
