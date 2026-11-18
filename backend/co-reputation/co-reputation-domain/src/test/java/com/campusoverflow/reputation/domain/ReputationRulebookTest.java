@@ -11,7 +11,7 @@ class ReputationRulebookTest {
 
     @ParameterizedTest(name = "{0} → {1} 的声誉增量为 {2}")
     @CsvSource({
-            "0, 1, 999",    // 新赞
+            "0, 1, 10",    // 新赞
             "0, -1, -2",   // 新踩
             "1, 0, -10",   // 撤销赞
             "-1, 0, 2",    // 撤销踩
