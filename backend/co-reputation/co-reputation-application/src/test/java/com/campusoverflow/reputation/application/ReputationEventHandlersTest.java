@@ -28,8 +28,8 @@ import org.junit.jupiter.api.Test;
  * 声誉事件处理器的应用层测试。全部手写替身、不启动 Spring：这 5 个处理器只依赖端口接口，
  * 因此可以在毫秒级验证「幂等、自问自答不加分、每日上限、开户积分」四条业务规则。
  *
- * <p>{@code BountyService} 传 {@code null}：采纳结算的最后一步（悬赏结算）归 {@code #47}，
- * 本卡的处理器有意不调用它，传入 null 可让「误调用」立刻炸成 NPE 而不是静默通过。
+ * <p>悬赏结算由 {@code BountyServiceTest} 单独覆盖；这里使用无操作替身，保持处理器测试聚焦于
+ * 开户、采纳、投票和徽章规则，不重复断言悬赏业务。
  */
 class ReputationEventHandlersTest {
 
@@ -53,7 +53,7 @@ class ReputationEventHandlersTest {
         BadgeService badgeService = new BadgeService(badges, events, clock);
         ReputationLedgerService ledgerService =
                 new ReputationLedgerService(accounts, ledger, badgeService, events, clock);
-        handlers = new ReputationEventHandlers(accounts, ledger, ledgerService, badgeService, null, clock);
+        handlers = new ReputationEventHandlers(accounts, ledger, ledgerService, badgeService, noopBountyService(), clock);
     }
 
     // ---------------- 开户 ----------------
@@ -240,6 +240,15 @@ class ReputationEventHandlersTest {
 
         assertThat(badges.awards).singleElement()
                 .satisfies(a -> assertThat(a.type()).isEqualTo(BadgeType.TEACHER_ENDORSED));
+    }
+
+    private static BountyService noopBountyService() {
+        return new BountyService(null, null, null, null, null, null, null, null) {
+            @Override
+            public void settleOnAccept(long questionId, long answerId, long winnerId, String sourceEventId) {
+                // 悬赏规则由 BountyServiceTest 覆盖。
+            }
+        };
     }
 
     // ---------------- 构造事件的helper ----------------
