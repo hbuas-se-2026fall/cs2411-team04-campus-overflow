@@ -11,7 +11,9 @@
 - 起始代码**只完整实现了 Identity**；Q&A / Reputation / Discovery 共 107 处待实现（起始状态，按 `throw` 行计），**现在剩 14 处，全部在 Discovery**——Identity 0、Q&A 0、Reputation 0（前两个上下文已全部实现并纳入 CI 门禁）。
 - 查当前数量用这条，别凭记忆（Windows 上没有 `grep`，用 `git grep`，`git` 自带、跨平台）：
   `git grep -n 'throw new UnsupportedOperationException("TODO' -- 'backend/*.java'`
-- **5 个测试当前为红**，全部在 `DiscoveryDomainTest`——**测试即需求**，先读测试再写实现。这 5 个覆盖 `SearchQuery.terms`、`RelatedQuestionPolicy.jaccard`、`MentionParser.extract`、`Notification.create` / `markRead`，即批次 4 的内容。其余 **144 个单元测试全绿**（含 `ArchitectureTest` 的 1 个 `@ArchTest`）；另有 `CampusOverflowFlowIT` 3 个集成测试，`mvn test` 不跑，要 `mvn verify` 且需要 Docker。
+  > **PowerShell 5.1 会把引号吃掉**，上面这条会返回 0 行（看着像"已经做完了"，最危险）。PowerShell 7+ / cmd / bash 无此问题。5.1 下改用免引号写法（实测两种版本都返回 14 行）：
+  > `git grep -n 'Exception(.TODO' -- 'backend/*.java'`
+- **5 个测试当前为红**，全部在 `DiscoveryDomainTest`——**测试即需求**，先读测试再写实现。这 5 个覆盖 `SearchQuery.terms`、`RelatedQuestionPolicy.jaccard`、`MentionParser.extract`、`Notification.create` / `markRead`，即批次 4 的内容。其余 **144 个单元测试全绿** = `mvn test` 跑出的 143 个 + 单独跑的 `ArchitectureTest` 1 个（`@ArchTest` 不在 `mvn test` 范围内，见第 12 节命令）；另有 `CampusOverflowFlowIT` 3 个集成测试，`mvn test` 不跑，要 `mvn verify` 且需要 Docker。
 - 权威需求：`CampusOverflow-实验指导书V3.pdf`（README 里的 15 周计划已废弃）。
 - **编号错位陷阱**：代码里的 `TODO(S2)` 对应 **V3 Sprint 1**；`TODO(S3)` 拆成 **Sprint 2（Reputation）+ Sprint 3（Discovery）**。建 Issue / Milestone 时按 V3 填。
 
@@ -68,7 +70,7 @@
 2. **跨上下文只经 `*-api` 或集成事件**：不得 import 其他上下文的 `domain` / `application` 类。
 3. **写操作在 `@Transactional` 内**；事件在聚合保存**之后**、**同一事务**内发布（事务性发件箱）。
 4. **消费端必须幂等**：同一事件重复投递不得重复记账（账本唯一键 `(event_id, user_id, reason)`、`processed_event` 表、通知唯一键 `(source_event_id, recipient_id)`）。
-5. **错误码**：形如 `QA-1013`——前缀表示上下文（`QA-` / `REP-` / `DIS-` / `ID-` / `AUTH-` / `SYS-`），首位数字表示异常族：`1xxx`=业务规则 422、`2xxx`=冲突 409、`3xxx`=禁止 403、`4xxx`=未找到 404。新增错误码前先 `git grep -n '"QA-10' -- 'backend/*.java'` 查现有代码避免重号；已出现的码以代码为准（`docs/错误码对照表.md` 尚未建立，见 `docs/tech-debt.md` 的 C5 与 Issue #32）。
+5. **错误码**：形如 `QA-1013`——前缀表示上下文（`QA-` / `REP-` / `DIS-` / `ID-` / `AUTH-` / `SYS-`），首位数字表示异常族：`1xxx`=业务规则 422、`2xxx`=冲突 409、`3xxx`=禁止 403、`4xxx`=未找到 404。新增错误码前先 `git grep -n 'QA-10' -- 'backend/*.java'` 查现有代码避免重号（**不要写 `'"QA-10'`**，PowerShell 5.1 会吃掉引号返回 0 行）；已出现的码以代码为准（`docs/错误码对照表.md` 尚未建立，见 `docs/tech-debt.md` 的 C5 与 Issue #32）。
 6. **计数器只用 `adjustXxx` 原子更新**，领域对象不回写 `score` / `answerCount` / `viewCount`。
 7. **渐进门禁只能「缩小运行范围」**，不得用 `-Dmaven.test.failure.ignore`、`@Disabled`、删测试来变绿。
 
