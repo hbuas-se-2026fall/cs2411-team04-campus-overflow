@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { api } from '../api';
 import type { LeaderboardEntry } from '../types';
 
@@ -28,7 +29,10 @@ export function LeaderboardPage() {
           {rows.map((r) => (
             <tr key={r.userId}>
               <td>{r.rank}</td>
-              <td>{r.displayName}{r.verified && <span className="verified" title="已认证">✔</span>}</td>
+              <td>
+                <Link to={`/users/${r.userId}`}>{r.displayName}</Link>
+                {r.verified && <span className="verified" title="已认证">✔</span>}
+              </td>
               <td>{r.score}</td>
             </tr>
           ))}

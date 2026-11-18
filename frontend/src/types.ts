@@ -37,3 +37,9 @@ export interface ReputationProfile {
   userId: number; displayName: string; reputation: number; availablePoints?: number; frozenPoints?: number;
   badges: { code: string; name: string; description: string; awardedAt: string }[];
 }
+
+/** 声誉流水一行。仅本人与管理员可读取（`GET /v1/users/{id}/reputation/ledger`）。 */
+export interface LedgerEntry {
+  id: number; reason: string; reasonLabel: string; delta: number;
+  refType: string; refId: number; createdAt: string;
+}
