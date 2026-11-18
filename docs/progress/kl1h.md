@@ -1,10 +1,19 @@
 # 谢守航（kl1h）的进度
 
-最后更新：2026-11-14
-当前任务：`#29` T2-05 CommentService / QaQueryApiImpl（批次 2）
-状态：待 PO / 技术负责人合并
+最后更新：2026-11-18
+当前任务：`#47` T3-03 Bounty 领域方法 / BountyService 悬赏闭环（Sprint 3）
+状态：待 PO / 技术负责人评审
 卡在哪：无
-下一步：[PR #39](https://github.com/hbuas-se-2026fall/cs2411-team04-campus-overflow/pull/39) 合并最新 `develop` 并通过 CI 后，由 PO / 技术负责人合并；本人不自行合并
+下一步：PR 通过 CI 与评审后，由 PO / 技术负责人合并；本人不自行合并
+
+## 2026-11-18
+
+- 完成 #47（T3-03）悬赏闭环：
+  - `Bounty` 实现发起、奖励、关闭退款、到期判断与终态保护，覆盖课程管理权限、积分 / 期限范围、问题状态及禁止自领等规则。
+  - `BountyService` 实现发起冻结积分、采纳结算、到期退款与最新悬赏查询；保存聚合后在同一事务内发布事件，账本与悬赏终态共同保证幂等。
+  - `ReputationEventHandlers` 接入 `AnswerAccepted` 悬赏结算；发起人自己的回答被采纳时关闭悬赏并退款。
+- 新增 `BountyServiceTest` 4 个用例，覆盖发起冻结 / 事件 / 审计 / 查询、采纳奖励、重复采纳幂等、到期退款；既有处理器测试仅改用无操作悬赏替身，未修改任何已有断言。
+- 验证：`co-reputation-domain` **15/15**、`co-reputation-application` **18/18**、`ArchitectureTest` **1/1** 全部通过。
 
 ## 2026-11-14
 
