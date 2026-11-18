@@ -1,16 +1,19 @@
 # PO（Bugmageddon）的进度
 
-最后更新：2026-11-14
-当前任务：`#30` CI 纳入 `co-qa-application`（已提 PR）
+最后更新：2026-11-18
+当前任务：`#49` CI 纳入 `co-reputation` 门禁（已提 PR）
 状态：待评审合并
 卡在哪：无
 下一步：
-- 等 `#30` 的 PR 评审通过后合并，Sprint 2 里程碑随之关闭
-- 评审并合并 PR #41（`#31`，王子昂）
-- 催王子昂开工 `#32`（错误码对照表，他手上最后一张）
+- 等 `#49` 的 PR 评审通过后合并，Reputation 的 42 个测试才真正受门禁保护
+- 做 `#50` 前端联调验收（排行榜 / 悬赏对话框 + 补齐声誉页）
+- 催王子昂开工 `#32`（错误码对照表 60 条）与 `#51`（演示脚本 + ADR-010）
 
 ## 已完成
 
+- **2026-11-18**：`#49` CI 纳入 `co-reputation` 门禁——`SPRINT_MODULES` 追加 `co-reputation/co-reputation-domain` 与 `co-reputation/co-reputation-application`。此前这 42 个测试在 CI 里一次都没跑过。覆盖率试点（0.70）本卡不做：`domain.coverage.minimum` 是全局属性，改动会同时影响 `co-qa-domain` / `co-identity-domain`，而本地 `verify` 阶段 jacoco 在沙箱里会崩，无法自检
+- **2026-11-15**：关闭 Sprint 2 里程碑（8/9，`#32` 挪到 Sprint 3）；建 Sprint 3 里程碑与 8 张任务卡（#45–#51 + #32 改号）
+- **2026-11-14**：`#30` CI 纳入 `co-qa-application`（PR #44），含反向验证（改坏断言 → CI 变红 → 改回 → 变绿）
 - **2026-11-06**：仓库初始化、分支保护、默认分支改 develop
 - **2026-11-06**：进度看板体系（`docs/status.md` + `docs/progress/`）
 - **2026-11-06**：CI 渐进式质量门禁（ADR-009）+ 进度文件检查
