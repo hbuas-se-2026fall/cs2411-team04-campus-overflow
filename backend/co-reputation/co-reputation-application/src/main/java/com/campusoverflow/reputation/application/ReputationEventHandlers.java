@@ -35,10 +35,8 @@ import org.springframework.transaction.annotation.Transactional;
  *       {@code record → ReputationChangedEvent} 与 {@code grant → BadgeAwardedEvent}。</li>
  * </ul>
  *
- * <p><b>与 T3-03 的边界</b>：采纳结算的最后一步「悬赏结算」由 {@code BountyService.settleOnAccept}
- * 负责，属 {@code #47}（T3-03）。它目前仍是 {@code UnsupportedOperationException}，此处<em>故意不调用</em>——
- * 若现在调用，每一个 {@code AnswerAccepted} 事件都会抛异常，被 OutboxRelay 记为失败并指数退避，
- * 十次后进死信，整条声誉事件链随之堵死。{@code #47} 落地时在此补一行调用即可（{@code bounties} 字段已注入）。
+ * <p><b>悬赏结算</b>：采纳事件在同一事务内调用 {@code BountyService.settleOnAccept}；
+ * 重复事件由悬赏终态与账本唯一键共同保证幂等，发起人自己的回答被采纳时关闭悬赏并退款。
  */
 @Component
 public class ReputationEventHandlers {
@@ -84,13 +82,13 @@ public class ReputationEventHandlers {
         int delta = ReputationRulebook.acceptedDelta(e.answerAuthorId(), e.questionAuthorId());
         boolean recorded = ledgerService.record(e.answerAuthorId(), e.eventId(), ReputationReason.ANSWER_ACCEPTED,
                 delta, "ANSWER", e.answerId());
+        bounties.settleOnAccept(e.questionId(), e.answerId(), e.answerAuthorId(), e.eventId());
         if (!recorded) {
             // 重复事件，或自问自答（delta = 0）——两种情况都不该再判徽章。
             return;
         }
         long acceptedCount = ledger.countByUserAndReason(e.answerAuthorId(), ReputationReason.ANSWER_ACCEPTED);
         BadgePolicy.forAcceptedCount(acceptedCount).forEach(b -> badges.grant(e.answerAuthorId(), b));
-        // TODO(#47)：此处补 bounties.settleOnAccept(e.questionId(), e.answerId(), e.answerAuthorId(), e.eventId())
     }
 
     @EventListener
