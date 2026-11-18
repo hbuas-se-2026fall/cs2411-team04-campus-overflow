@@ -105,7 +105,7 @@ class ReputationReadServicesTest {
 
         assertThatThrownBy(() -> queries.ledger(USER_ID, OTHER, new PageRequest(1, 20)))
                 .isInstanceOfSatisfying(ForbiddenException.class,
-                        e -> assertThat(e.code()).isEqualTo("REP-3001"));
+                        e -> assertThat(e.code()).isEqualTo("REP-3002"));
         assertThat(queries.ledger(USER_ID, ADMIN, new PageRequest(1, 20)).items())
                 .singleElement()
                 .satisfies(entry -> {

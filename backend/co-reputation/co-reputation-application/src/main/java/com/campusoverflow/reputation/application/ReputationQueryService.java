@@ -50,7 +50,7 @@ public class ReputationQueryService {
     /** 声誉流水属于个人数据：仅本人与管理员可查看。 */
     public PageResult<LedgerEntryView> ledger(long userId, Actor viewer, PageRequest page) {
         if (viewer == null || (!viewer.is(userId) && !viewer.isAdmin())) {
-            throw new ForbiddenException("REP-3001", "无权查看他人声誉流水");
+            throw new ForbiddenException("REP-3002", "无权查看他人声誉流水");
         }
         return ledger.findByUser(userId, page).map(entry -> new LedgerEntryView(entry.id(), entry.reason().name(),
                 entry.reason().label(), entry.delta(), entry.refType(), entry.refId(), entry.createdAt()));

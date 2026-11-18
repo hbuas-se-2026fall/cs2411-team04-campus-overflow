@@ -13,7 +13,8 @@
   - `ReputationApiImpl` 实现单人与批量声誉查询；无账户返回 0，批量结果省略缺失用户。
   - `LeaderboardService` 实现事件幂等与排行榜装配；周 / 月 / 学期榜走 Redis，`ALL` 总榜按既有设计读取账户表，昵称批量查询，排名从 1 开始。
   - `ReconciliationService` 实现账户声誉与流水总和的每日对账。
-- 新增 `ReputationReadServicesTest` **8 个用例**，覆盖任务卡 7 项验收及 `ALL` 总榜回归；未修改任何已有测试断言。
+- 新增 `ReputationReadServicesTest` **8 个用例**，覆盖任务卡 7 项验收及 `ALL` 总榜回归；既有测试断言保持不变。
+- 评审修正：流水越权错误码按指导书 §3.7 由 `REP-3001` 调整为 `REP-3002`，并同步本卡对应断言。
 - 验证：本卡 **8/8**、既有 `ReputationEventHandlersTest` **14/14**，应用层合计 **22/22**；`ArchitectureTest` **1/1** 通过。
 - 基线说明：完整 `-am` 命令会先遇到 `develop` 上 #47 尚未实现的 3 个 `Bounty` 领域红测试；本卡未改动该任务，按渐进门禁定向运行本卡与既有应用层测试，未忽略失败、未删除测试或添加 `@Disabled`。
 
