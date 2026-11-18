@@ -13,6 +13,7 @@ import com.campusoverflow.reputation.domain.ReputationAccount;
 import com.campusoverflow.reputation.domain.ReputationAccountRepository;
 import com.campusoverflow.reputation.domain.ReputationReason;
 import com.campusoverflow.shared.audit.AuditTrail;
+import com.campusoverflow.shared.domain.ConflictException;
 import com.campusoverflow.shared.domain.NotFoundException;
 import com.campusoverflow.shared.event.EventIds;
 import com.campusoverflow.shared.event.IntegrationEventPublisher;
@@ -55,6 +56,9 @@ public class BountyService {
     public long open(Actor actor, long questionId, int points, int days) {
         QuestionRef question = qa.findQuestion(questionId)
                 .orElseThrow(() -> new NotFoundException("QA-4001", "问题不存在：" + questionId));
+        if (bounties.findOpenByQuestion(questionId).isPresent()) {
+            throw new ConflictException("REP-2001", "该问题已有进行中的悬赏：" + questionId);
+        }
         Instant now = clock.instant();
         Bounty bounty = Bounty.open(questionId, !question.deleted() && question.acceptedAnswerId() == null, actor,
                 identity.canManageCourse(actor.userId(), question.courseId()), points, days, now);

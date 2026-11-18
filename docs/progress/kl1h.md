@@ -12,8 +12,9 @@
   - `Bounty` 实现发起、奖励、关闭退款、到期判断与终态保护，覆盖课程管理权限、积分 / 期限范围、问题状态及禁止自领等规则。
   - `BountyService` 实现发起冻结积分、采纳结算、到期退款与最新悬赏查询；保存聚合后在同一事务内发布事件，账本与悬赏终态共同保证幂等。
   - `ReputationEventHandlers` 接入 `AnswerAccepted` 悬赏结算；发起人自己的回答被采纳时关闭悬赏并退款。
-- 新增 `BountyServiceTest` 4 个用例，覆盖发起冻结 / 事件 / 审计 / 查询、采纳奖励、重复采纳幂等、到期退款；既有处理器测试仅改用无操作悬赏替身，未修改任何已有断言。
-- 验证：`co-reputation-domain` **15/15**、`co-reputation-application` **18/18**、`ArchitectureTest` **1/1** 全部通过。
+- 新增 `BountyServiceTest` 5 个用例，覆盖发起冻结 / 事件 / 审计 / 查询、重复发起、采纳奖励、重复采纳幂等、到期退款；既有处理器测试仅改用无操作悬赏替身，未修改任何已有断言。
+- 评审修正：按指导书 §3.7 对齐 6 个 `Bounty` 错误码；`open` 增加 `REP-2001` 重复悬赏检查，第二次发起在冻结积分前拒绝。
+- 验证：`co-reputation-domain` **15/15**、`co-reputation-application` **19/19**、`ArchitectureTest` **1/1** 全部通过。
 
 ## 2026-11-14
 

@@ -47,16 +47,16 @@ public class Bounty {
     public static Bounty open(long questionId, boolean questionOpen, Actor sponsor, boolean sponsorManagesCourse,
                               int points, int days, Instant now) {
         if (!sponsorManagesCourse) {
-            throw new ForbiddenException("REP-3002", "只有课程管理者可以发起悬赏");
+            throw new ForbiddenException("REP-3001", "只有课程管理者可以发起悬赏");
         }
         if (points < MIN_POINTS || points > MAX_POINTS) {
-            throw new BusinessRuleException("REP-1007", "悬赏积分必须在 " + MIN_POINTS + "–" + MAX_POINTS + " 之间");
+            throw new BusinessRuleException("REP-1003", "悬赏积分必须在 " + MIN_POINTS + "–" + MAX_POINTS + " 之间");
         }
         if (days <= 0 || days > MAX_DAYS) {
-            throw new BusinessRuleException("REP-1008", "悬赏期限必须在 1–" + MAX_DAYS + " 天之间");
+            throw new BusinessRuleException("REP-1004", "悬赏期限必须在 1–" + MAX_DAYS + " 天之间");
         }
         if (!questionOpen) {
-            throw new BusinessRuleException("REP-1009", "已删除或已采纳的问题不能发起悬赏");
+            throw new BusinessRuleException("REP-1001", "已删除或已采纳的问题不能发起悬赏");
         }
         return new Bounty(null, questionId, sponsor.userId(), points, BountyStatus.OPEN, now,
                 now.plus(Duration.ofDays(days)), null, null, null);
@@ -72,7 +72,7 @@ public class Bounty {
     public void award(long answerId, long winnerId, Instant now) {
         ensureOpen();
         if (winnerId == sponsorId) {
-            throw new BusinessRuleException("REP-1010", "发起人不能赢得自己的悬赏");
+            throw new BusinessRuleException("REP-1005", "发起人不能赢得自己的悬赏");
         }
         status = BountyStatus.AWARDED;
         this.answerId = answerId;
@@ -93,7 +93,7 @@ public class Bounty {
 
     private void ensureOpen() {
         if (status != BountyStatus.OPEN) {
-            throw new ConflictException("REP-2001", "悬赏已结束，不能重复结算");
+            throw new ConflictException("REP-2002", "悬赏已结束，不能重复结算");
         }
     }
 

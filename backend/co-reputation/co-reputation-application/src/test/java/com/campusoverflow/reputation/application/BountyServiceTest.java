@@ -1,6 +1,7 @@
 package com.campusoverflow.reputation.application;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.campusoverflow.identity.api.CourseSummary;
 import com.campusoverflow.identity.api.IdentityApi;
@@ -19,6 +20,7 @@ import com.campusoverflow.reputation.domain.ReputationAccount;
 import com.campusoverflow.reputation.domain.ReputationReason;
 import com.campusoverflow.qa.api.QuestionRef;
 import com.campusoverflow.shared.audit.AuditTrail;
+import com.campusoverflow.shared.domain.ConflictException;
 import com.campusoverflow.shared.security.Actor;
 import com.campusoverflow.shared.security.Role;
 import java.time.Clock;
@@ -88,6 +90,19 @@ class BountyServiceTest {
             assertThat(view.sponsorName()).isEqualTo("王老师");
             assertThat(view.status()).isEqualTo(BountyStatus.OPEN.name());
         });
+    }
+
+    @Test
+    void secondOpenOnSameQuestionIsRejected() {
+        service.open(SPONSOR, QUESTION_ID, 100, 7);
+
+        assertThatThrownBy(() -> service.open(SPONSOR, QUESTION_ID, 50, 7))
+                .isInstanceOfSatisfying(ConflictException.class,
+                        e -> assertThat(e.code()).isEqualTo("REP-2001"));
+
+        ReputationAccount sponsor = accounts.findByUserId(SPONSOR_ID).orElseThrow();
+        assertThat(sponsor.availablePoints()).isEqualTo(900);
+        assertThat(sponsor.frozenPoints()).isEqualTo(100);
     }
 
     @Test
