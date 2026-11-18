@@ -22,9 +22,9 @@ env:
   # 每个 Sprint 计划会后更新一次，只增不减，直到 S3 恢复全量。
   #   S0: co-shared-kernel,co-identity/co-identity-domain
   #   S1: 追加 co-qa/co-qa-domain,co-qa/co-qa-application（批次 2 完成）
-  #   S2: 追加 co-reputation/co-reputation-domain,co-reputation/co-reputation-application
+  #   S2: 追加 co-reputation/co-reputation-domain,co-reputation/co-reputation-application（批次 3 完成）
   #   S3: 删除本变量，恢复全量 mvn test / verify
-  SPRINT_MODULES: co-shared-kernel,co-identity/co-identity-domain,co-qa/co-qa-domain,co-qa/co-qa-application
+  SPRINT_MODULES: co-shared-kernel,co-identity/co-identity-domain,co-qa/co-qa-domain,co-qa/co-qa-application,co-reputation/co-reputation-domain,co-reputation/co-reputation-application
 
 jobs:
   backend:

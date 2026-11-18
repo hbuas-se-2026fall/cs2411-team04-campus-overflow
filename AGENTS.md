@@ -8,7 +8,12 @@
 
 - 《软件工程》课程贯穿项目：**CampusOverflow 校园问答平台**（校园版 Stack Overflow）。
 - 后端 Java 21 + Spring Boot 3.4，模块化单体 + 六边形分层，4 个限界上下文 × 5 层 = 27 个 Maven 模块；前端 React 18 + TypeScript + Vite。
-- 起始代码**只完整实现了 Identity**；Q&A(36) / Reputation(39) / Discovery(32) 共 **107 个方法待实现**，约 38 个测试当前为红——**测试即需求**，先读测试再写实现。
+- 起始代码**只完整实现了 Identity**；Q&A / Reputation / Discovery 共 107 处待实现（起始状态，按 `throw` 行计），**现在剩 14 处，全部在 Discovery**——Identity 0、Q&A 0、Reputation 0（前两个上下文已全部实现并纳入 CI 门禁）。
+- 查当前数量用这条，别凭记忆（Windows 上没有 `grep`，用 `git grep`，`git` 自带、跨平台）：
+  `git grep -n 'throw new UnsupportedOperationException("TODO' -- 'backend/*.java'`
+  > **PowerShell 5.1 会把引号吃掉**，上面这条会返回 0 行（看着像"已经做完了"，最危险）。PowerShell 7+ / cmd / bash 无此问题。5.1 下改用免引号写法（实测两种版本都返回 14 行）：
+  > `git grep -n 'Exception(.TODO' -- 'backend/*.java'`
+- **5 个测试当前为红**，全部在 `DiscoveryDomainTest`——**测试即需求**，先读测试再写实现。这 5 个覆盖 `SearchQuery.terms`、`RelatedQuestionPolicy.jaccard`、`MentionParser.extract`、`Notification.create` / `markRead`，即批次 4 的内容。其余 **144 个单元测试全绿** = `mvn test` 跑出的 143 个 + 单独跑的 `ArchitectureTest` 1 个（`@ArchTest` 不在 `mvn test` 范围内，见第 12 节命令）；另有 `CampusOverflowFlowIT` 3 个集成测试，`mvn test` 不跑，要 `mvn verify` 且需要 Docker。
 - 权威需求：`CampusOverflow-实验指导书V3.pdf`（README 里的 15 周计划已废弃）。
 - **编号错位陷阱**：代码里的 `TODO(S2)` 对应 **V3 Sprint 1**；`TODO(S3)` 拆成 **Sprint 2（Reputation）+ Sprint 3（Discovery）**。建 Issue / Milestone 时按 V3 填。
 
@@ -23,12 +28,13 @@
 
 | 角色 | 姓名 | GitHub | 主责 |
 | --- | --- | --- | --- |
-| PO + SM | Bugmageddon | Bugmageddon | 看板、任务分配、评审、演示与最终答辩 |
+| PO + SM | Bugmageddon | Bugmageddon | 看板、任务分配、评审、演示与最终答辩；CI / 文档 / 门禁 |
 | 技术负责人 | 代一鸣 | qwerbnmv | Q&A 与 Reputation 核心领域，技术兜底 |
 | 后端开发 | 谢守航 | kl1h | 应用层服务 + Discovery |
-| 前端 / 物料 | 王子昂 | Tourbillion-ANG | 前端页面与演示物料（独立任务） |
+| 文档 / 物料 | 王子昂 | Tourbillion-ANG | **不写 Java、不做前端**：ADR、词汇表、错误码表、演示物料（边界清晰、量大、可独立完成） |
 
 - 4 人对应 V3 的 A–E 需要合并：E（质量与 DevOps）由 PO 与技术负责人分担。
+- **前端代码已基本完成**：6 个页面（首页 / 问题详情 / 提问 / 登录 / 排行榜 / 通知）全部真实调用 `api.ts`，零 TODO、零 mock。**唯一缺口**：`api.ts:78` 有 `reputation()` 方法、`types.ts` 有 `ReputationProfile`，但没有页面调用它，`App.tsx` 也没有 `/users/:id` 路由——这是批次 3 `#50` 的活。「前端开发」不是待办任务，最多只能做「联调验收 + 补这一页」。
 
 ## 4. 开工前必做（四步）
 
@@ -64,7 +70,7 @@
 2. **跨上下文只经 `*-api` 或集成事件**：不得 import 其他上下文的 `domain` / `application` 类。
 3. **写操作在 `@Transactional` 内**；事件在聚合保存**之后**、**同一事务**内发布（事务性发件箱）。
 4. **消费端必须幂等**：同一事件重复投递不得重复记账（账本唯一键 `(event_id, user_id, reason)`、`processed_event` 表、通知唯一键 `(source_event_id, recipient_id)`）。
-5. **错误码**：形如 `QA-1013`——前缀表示上下文（`QA-` / `REP-` / `DIS-` / `ID-` / `AUTH-` / `SYS-`），首位数字表示异常族：`1xxx`=业务规则 422、`2xxx`=冲突 409、`3xxx`=禁止 403、`4xxx`=未找到 404。新增错误码前先 `grep` 现有代码避免重号；已出现的码以代码为准（`docs/错误码对照表.md` 尚未建立，见 `docs/tech-debt.md`）。
+5. **错误码**：形如 `QA-1013`——前缀表示上下文（`QA-` / `REP-` / `DIS-` / `ID-` / `AUTH-` / `SYS-`），首位数字表示异常族：`1xxx`=业务规则 422、`2xxx`=冲突 409、`3xxx`=禁止 403、`4xxx`=未找到 404。新增错误码前先 `git grep -n 'QA-10' -- 'backend/*.java'` 查现有代码避免重号（**不要写 `'"QA-10'`**，PowerShell 5.1 会吃掉引号返回 0 行）；已出现的码以代码为准（`docs/错误码对照表.md` 尚未建立，见 `docs/tech-debt.md` 的 C5 与 Issue #32）。
 6. **计数器只用 `adjustXxx` 原子更新**，领域对象不回写 `score` / `answerCount` / `viewCount`。
 7. **渐进门禁只能「缩小运行范围」**，不得用 `-Dmaven.test.failure.ignore`、`@Disabled`、删测试来变绿。
 
@@ -85,10 +91,12 @@
 | 批次 | 门禁 | 内容 |
 | --- | --- | --- |
 | 1 | 无 | 仓库设置、环境、Q&A 领域 6 个类、支持性文档 |
-| 2 | Q&A 领域测试全绿 | 三个命令服务、行走骨架、CI 渐进门禁 |
-| 3 | 应用层测试绿 | 查询服务、前端接线、冒烟脚本 |
-| 4 | Q&A 闭环可演示 | 声誉 / 徽章 / 悬赏 / 排行榜 |
-| 5 | 端到端可跑 | 搜索 / 通知、收尾与发布 |
+| 2 | Q&A 领域测试全绿 | **9 张卡（Issue #24–#32）**：监听器空实现、三个命令服务、两个查询服务、CI 纳入 `co-qa-application`、ADR、错误码表。**已完成 8/9**——`#24`~`#31` 全部合并，`#32` 错误码表因当时 `REP-*` 尚未实现而挪到批次 3 |
+| 3 | Reputation 测试全绿（已达成：domain 15/15 + application 27/27，均已纳入 CI 门禁） | **8 张卡（Issue #45–#51 + #32）**：声誉领域与事件记账、悬赏闭环、查询/排行榜/对账、CI 纳入 `co-reputation`、前端联调验收、错误码对照表、演示脚本与 ADR-010 |
+| 4 | 端到端可跑（`mvn verify` + `CampusOverflowFlowIT` 绿） | **Discovery（剩 14 个 TODO）**：搜索 / 相关推荐 / 通知 / @提醒；清库重建 + 全链路走查 |
+| 5 | 可演示可交付 | 发布 v1.0.0、Grafana 面板、README 与收尾、答辩彩排 |
+
+> 批次 3 与批次 4 的分界已按实际执行调整：原表把 Reputation 排在批次 4，2026-11-15 排 Sprint 3 时把 Reputation 提前到批次 3，Discovery 顺延到批次 4。
 
 ## 10. 文档索引
 
@@ -117,10 +125,13 @@
 mvn -B -f backend/pom.xml test -pl co-qa/co-qa-domain -am
 
 # 架构约束检查（必须始终通过）
-mvn -B -f backend/pom.xml test -pl co-bootstrap -am -Dtest=ArchitectureTest
+mvn -B -f backend/pom.xml test -pl co-bootstrap -am -Dtest=ArchitectureTest -Dsurefire.failIfNoSpecifiedTests=false
 
-# 全量测试（当前一定是红的，作为基线参考）
+# 全量单元测试（当前只剩 Discovery 的 5 个红，作为基线参考）
 mvn -B -f backend/pom.xml test
+
+# 集成测试（需要 Docker；会跑 CampusOverflowFlowIT，Discovery 未完成前必红）
+mvn -B -f backend/pom.xml verify
 
 # 前端类型检查 + 构建（CI 会跑这两条）
 cd frontend && npm run typecheck && npm run build
@@ -138,7 +149,7 @@ mvn -B -f backend/pom.xml spring-boot:run -pl co-bootstrap -Dspring-boot.run.pro
 因此：
 
 1. **还没进入当前批次的上下文，其监听器必须先写成空实现**（只打 DEBUG 日志），否则整条事件链会被堵死，表现为"声誉永远不变化"。
-2. 每个空实现要在文件顶部注释里链接对应的 tech-debt Issue，到该批次再实现。
+2. 每个空实现都要能被后来的人一眼认出来：**现在只剩两个类**——`NotificationProjector` / `SearchIndexProjector`（都在 `co-discovery-application`），类注释里有「批次 2 临时状态」段落，并指向各方法上的 `TODO(S3)`。**这些注释里没有 Issue 编号**——想找对应的技术债，查 `docs/tech-debt.md`。`ReputationEventHandlers` 已在批次 3 实现完毕（`#46`），不再是空实现。
 3. 进入实现阶段后需要重放事件：
 
 ```sql
