@@ -105,6 +105,8 @@ SELECT user_id, badge_code FROM rep_badge;
 四步全做完，B 的声誉相对基线 **+10**（10 − 10 − 2 + 12）。
 
 - **校验**：`GET /api/v1/users/<B的id>/reputation/ledger` 里应有 4 条 `ANSWER_VOTE`
+  （只看 `ref_id` = **新建回答的 id** 的流水；种子数据里 `DemoDataSeeder:120` 也给 q1 的回答投过票，
+  那是另一个 `ref_id`，别一起数）
 - **答辩点**：改投**不是**「先扣再补两条流水」，而是**一条**按「新效果 − 旧效果」算的流水
   （`ReputationRulebook.voteDelta:33-35`；6 组用例见 `ReputationRulebookTest:13-20`）
 - **反作弊**：每人每个自然日（UTC）因被投票获得的正向声誉最多 **+200**（`DAILY_VOTE_CAP`）；
@@ -144,7 +146,8 @@ SELECT user_id, badge_code FROM rep_badge;
   2. B 的声誉再 **+50**（悬赏结算，以**声誉**形式入账，不是积分）
   3. 教师的 `frozenPoints` **−50**（50 → 0），`availablePoints` 仍是 950 —— 这 50 分**没有**转进 B 的钱包
 - **徽章**：B 获得 `FIRST_ACCEPTED`（初露锋芒）；悬赏状态 `OPEN → AWARDED`
-- **预期总账**：若步骤 3 全部做完，B 的声誉相对基线为 **+65**（10 + 15 + 50）
+- **预期总账**：若步骤 3 全部做完，B 的声誉相对基线为 **+75**
+  （步骤 3 的 +10 + 采纳 +15 + 悬赏 +50）
 - **校验**：
   ```sql
   SELECT reason, delta, ref_type, ref_id FROM rep_ledger WHERE user_id = <B 的 id> ORDER BY id;
