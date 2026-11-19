@@ -8,6 +8,7 @@ import { AskPage } from './pages/AskPage';
 import { LoginPage } from './pages/LoginPage';
 import { LeaderboardPage } from './pages/LeaderboardPage';
 import { NotificationsPage } from './pages/NotificationsPage';
+import { ReputationPage } from './pages/ReputationPage';
 
 function Header() {
   const { me, logout } = useAuth();
@@ -62,6 +63,7 @@ export function App() {
             <Route path="/ask" element={<RequireAuth><AskPage /></RequireAuth>} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/leaderboard" element={<LeaderboardPage />} />
+            <Route path="/users/:id" element={<ReputationPage />} />
             <Route path="/notifications" element={<RequireAuth><NotificationsPage /></RequireAuth>} />
           </Routes>
         </main>

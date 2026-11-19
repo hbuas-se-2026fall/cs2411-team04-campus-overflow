@@ -1,16 +1,17 @@
 # PO（Bugmageddon）的进度
 
 最后更新：2026-11-18
-当前任务：`#49` CI 纳入 `co-reputation` 门禁（已提 PR）
+当前任务：`#50` 前端联调验收 + 补齐声誉页（已提 PR）
 状态：待评审合并
 卡在哪：无
 下一步：
-- 等 `#49` 的 PR 评审通过后合并，Reputation 的 42 个测试才真正受门禁保护
-- 做 `#50` 前端联调验收（排行榜 / 悬赏对话框 + 补齐声誉页）
-- 催王子昂开工 `#32`（错误码对照表 60 条）与 `#51`（演示脚本 + ADR-010）
+- 等 `#50` 的 PR 评审通过后合并，Sprint 3 的 8 张卡即全部关闭
+- 给代一鸣、谢守航开 Discovery 的 4 张卡（14 个 `UnsupportedOperationException` + 15 个空监听器）
+- Discovery 前置卡（7 个纯领域方法）要在 11-21 前合并
 
 ## 已完成
 
+- **2026-11-18**：`#50` 前端联调验收 + 补齐声誉页。新增 `frontend/src/pages/ReputationPage.tsx`（`/users/:id` 路由，展示声誉、徽章、流水；`availablePoints` 为 null 时不显示积分，不渲染成 0）；`LeaderboardPage` 用户名改为链到声誉页；`QuestionDetailPage` 按 `permissions.canDelete` 增加删除按钮（`deleteQuestion` 从「定义了没人调」变为「有入口」）；`api.ts` 补 `ledger()` 与 `LedgerEntry` 类型；`http/auth-smoke.ps1` 从 85 行扩到 190 行，新增 reputation → ledger → leaderboard → bounty 四段，其中悬赏用「预期 403 REP-3001」验证权限门禁，末尾自动软删除本次创建的问题。`npm run typecheck` 与 `npm run build` 均 exit=0
 - **2026-11-18**：`#49` CI 纳入 `co-reputation` 门禁——`SPRINT_MODULES` 追加 `co-reputation/co-reputation-domain` 与 `co-reputation/co-reputation-application`。此前这 42 个测试在 CI 里一次都没跑过。覆盖率试点（0.70）本卡不做：`domain.coverage.minimum` 是全局属性，改动会同时影响 `co-qa-domain` / `co-identity-domain`，而本地 `verify` 阶段 jacoco 在沙箱里会崩，无法自检
 - **2026-11-15**：关闭 Sprint 2 里程碑（8/9，`#32` 挪到 Sprint 3）；建 Sprint 3 里程碑与 8 张任务卡（#45–#51 + #32 改号）
 - **2026-11-14**：`#30` CI 纳入 `co-qa-application`（PR #44），含反向验证（改坏断言 → CI 变红 → 改回 → 变绿）

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import { api } from '../api';
 import { useAuth } from '../auth';
 import type { QuestionDetail } from '../types';
@@ -8,6 +8,7 @@ export function QuestionDetailPage() {
   const { id } = useParams();
   const questionId = Number(id);
   const { me } = useAuth();
+  const navigate = useNavigate();
   const [q, setQ] = useState<QuestionDetail | null>(null);
   const [related, setRelated] = useState<{ id: number; title: string }[]>([]);
   const [draft, setDraft] = useState('');
@@ -53,6 +54,13 @@ export function QuestionDetailPage() {
                 const points = Number(prompt('悬赏积分（10–500）', '50'));
                 if (points) act(() => api.bounty(q.id, points, 7));
               }}>发起悬赏
+              </button>
+            )}
+            {q.permissions.canDelete && (
+              <button className="link" onClick={() => {
+                if (!confirm('删除后内容不可见（软删除），确定吗？')) return;
+                api.deleteQuestion(q.id).then(() => navigate('/')).catch((e) => setError(e.message));
+              }}>删除问题
               </button>
             )}
           </div>
