@@ -1,0 +1,21 @@
+# 代码所有权（CODEOWNERS）
+#
+# 作用：当 PR 修改了下列路径时，GitHub 会自动请求对应的 owner 评审。
+# 这不是「必须批准才能合并」——那由 ruleset 的 required_pull_request_reviews 控制。
+# 这里解决的是「改了没人看见」：部署链路与 CI 出过沉默失败（见 Issue #80），
+# 所以这两个目录的任何改动都必须让 PO 与技术负责人知道。
+#
+# 语法：<pattern> <owner> [<owner>...]
+# owner 必须是仓库协作者（实测：Bugmageddon=admin、qwerbnmv=write）。
+
+# 部署与容器：Dockerfile、compose、nginx、prometheus、grafana
+/deploy/            @Bugmageddon @qwerbnmv
+
+# CI 流水线与门禁：改这个文件必须走 PR（见 AGENTS.md 与 ci.yml 头注释）
+/.github/           @Bugmageddon
+
+# 数据库迁移：改动不可逆，需要两人确认
+**/src/main/resources/db/migration/    @Bugmageddon @qwerbnmv
+
+# 根 POM：覆盖率阈值、模块清单、jacoco 配置都在这里
+/backend/pom.xml    @Bugmageddon @qwerbnmv
