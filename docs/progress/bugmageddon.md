@@ -1,16 +1,17 @@
 # PO（Bugmageddon）的进度
 
-最后更新：2026-11-18
-当前任务：`#50` 前端联调验收 + 补齐声誉页（已提 PR）
+最后更新：2026-11-21
+当前任务：`#68` 质量门禁收口（先做 CODEOWNERS 部分，已提 PR）
 状态：待评审合并
 卡在哪：无
 下一步：
-- 等 `#50` 的 PR 评审通过后合并，Sprint 3 的 8 张卡即全部关闭
-- 给代一鸣、谢守航开 Discovery 的 4 张卡（14 个 `UnsupportedOperationException` + 15 个空监听器）
-- Discovery 前置卡（7 个纯领域方法）要在 11-21 前合并
+- 等 CODEOWNERS 的 PR 合并
+- 王子昂的 `#80`（容器部署链路修复）是本轮最关键的阻塞点，卡住 `#69`/`#70`/`#78`/`#79` 四张卡
+- `#80` 合并后补完 `#79` 的后端两步，然后开工 `#70` Grafana
 
 ## 已完成
 
+- **2026-11-21**：`#68` 质量门禁收口的第一部分——新增 `.github/CODEOWNERS`。背景：`#78` 发现容器部署链路自起始代码（`0128278`）起从未跑通，一共埋了 5 个问题（jar 名不匹配、prod 硬编码 `cookie.secure: true`、无 `.dockerignore`、nginx 启动时硬解析 backend、`npm install` 无 lock）。这类问题的共同点是**沉默失败**——CI 的镜像 job 只在 `main` 触发而 `main` 零提交，Docker 的 `COPY` glob 匹配 0 文件只警告不失败。CODEOWNERS 覆盖 `/deploy/`、`/.github/`、`**/src/main/resources/db/migration/`、`/backend/pom.xml` 四类路径，改动自动请求 PO 与技术负责人评审
 - **2026-11-18**：`#50` 前端联调验收 + 补齐声誉页。新增 `frontend/src/pages/ReputationPage.tsx`（`/users/:id` 路由，展示声誉、徽章、流水；`availablePoints` 为 null 时不显示积分，不渲染成 0）；`LeaderboardPage` 用户名改为链到声誉页；`QuestionDetailPage` 按 `permissions.canDelete` 增加删除按钮（`deleteQuestion` 从「定义了没人调」变为「有入口」）；`api.ts` 补 `ledger()` 与 `LedgerEntry` 类型；`http/auth-smoke.ps1` 从 85 行扩到 190 行，新增 reputation → ledger → leaderboard → bounty 四段，其中悬赏用「预期 403 REP-3001」验证权限门禁，末尾自动软删除本次创建的问题。`npm run typecheck` 与 `npm run build` 均 exit=0
 - **2026-11-18**：`#49` CI 纳入 `co-reputation` 门禁——`SPRINT_MODULES` 追加 `co-reputation/co-reputation-domain` 与 `co-reputation/co-reputation-application`。此前这 42 个测试在 CI 里一次都没跑过。覆盖率试点（0.70）本卡不做：`domain.coverage.minimum` 是全局属性，改动会同时影响 `co-qa-domain` / `co-identity-domain`，而本地 `verify` 阶段 jacoco 在沙箱里会崩，无法自检
 - **2026-11-15**：关闭 Sprint 2 里程碑（8/9，`#32` 挪到 Sprint 3）；建 Sprint 3 里程碑与 8 张任务卡（#45–#51 + #32 改号）
@@ -32,4 +33,7 @@
 - **2026-11-12**：核实两位成员提出的问题。谢守航的 CI 诊断成立，但他有 3 处误判（① 误以为 PO 是组织 Owner——实为 member，Owner 只有 `BostonMIT`；② 误以为 3000 分钟被本队跑光——实际 63.49 分钟；③ 不必等 CI 恢复才能合并——`protect-develop` 规则集没有 `required_status_checks`）。王子昂对 #31 的 3 条核查全部成立
 - **2026-11-14**：**批次 2 主体完成，Q&A 应用层 TODO 归零**。`co-qa-application` 测试从 4 个涨到 **35 个全绿**（`AnswerAndVoteServiceTest` 5 / `CommentServiceTest` 5 / `QuestionCommandServiceTest` 8 / `VoteServiceTest` 5 / `QaQueryApiImplTest` 3 / `QuestionQueryServiceTest` 9）。9 张卡已合并 7 张（#24–#30），剩 #31（PR #41 待合并）、#32（未开工）。全仓库剩余 `UnsupportedOperationException` **48 个**：Reputation 34 / Discovery 14 / Q&A 0
 - **2026-11-14**：**`#30` CI 纳入 `co-qa-application`**。`.github/workflows/ci.yml` 的 `SPRINT_MODULES` 追加 `co-qa/co-qa-application`，同步更新第 23–26 行注释（批次编号与 `AGENTS.md` 第 9 节对齐）。此前后端 job 的「单元测试（Sprint 范围）」与「覆盖率门禁」两步根本不跑 application 模块的 35 个测试。已核对 `co-qa-application/pom.xml` 未声明 jacoco `check`，加入后不会因覆盖率阈值变红
+
+
+
 
