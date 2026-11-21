@@ -5,7 +5,7 @@ spring:
   profiles:
     default: dev
   datasource:
-    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:campus_overflow}?useUnicode=true&characterEncoding=utf8mb4&connectionTimeZone=UTC&forceConnectionTimeZoneToSession=true&rewriteBatchedStatements=true
+    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:campus_overflow}?useUnicode=true&characterEncoding=UTF-8&connectionTimeZone=UTC&forceConnectionTimeZoneToSession=true&rewriteBatchedStatements=true
     username: ${DB_USER:campus}
     password: ${DB_PASSWORD:campus_dev_pwd}
     hikari:
@@ -119,7 +119,7 @@ server:
   servlet:
     session:
       cookie:
-        secure: true
+        secure: ${COOKIE_SECURE:true}   # prod 默认 true；compose 传 false 可覆盖（本地 HTTP 演示）
 springdoc:
   swagger-ui:
     enabled: false                 # 生产环境关闭在线文档
