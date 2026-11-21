@@ -8,7 +8,7 @@ RUN mvn -B -DskipTests clean package
 FROM eclipse-temurin:21-jre-alpine
 RUN addgroup -S app && adduser -S app -G app && apk add --no-cache wget
 WORKDIR /app
-COPY --from=build /src/co-bootstrap/target/co-bootstrap-*.jar app.jar
+COPY --from=build /src/co-bootstrap/target/campus-overflow.jar app.jar
 USER app
 ENV JAVA_OPTS="-XX:MaxRAMPercentage=70 -Duser.timezone=UTC"
 EXPOSE 8080

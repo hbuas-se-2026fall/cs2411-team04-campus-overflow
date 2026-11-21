@@ -1,0 +1,12 @@
+.git
+.gitignore
+.idea
+.vscode
+**/target/
+**/node_modules/
+**/dist/
+**/.npm-cache/
+*.md
+docs/
+http/
+.tmp-*
