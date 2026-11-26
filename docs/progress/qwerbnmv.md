@@ -1,15 +1,32 @@
 # 代一鸣（qwerbnmv）的进度
 
-最后更新：2026-11-17
-当前任务：`#46` T3-02 徽章与学期键 5 个方法 + ReputationEventHandlers 5 个事件真正记账（批次 3）
+最后更新：2026-11-24
+当前任务：`#76` T4-ENV Docker 环境统一（批次 4）
 状态：待评审
 卡在哪：无
 下一步：
-- `#46` 的 PR 等 PO Approve 后合并
-- `#46` 合并后本批我的卡已做完（`#45`、`#46`），批次 3 剩余卡 `#47` / `#48` 由 kl1h 负责，`#49` / `#50` 由 PO 负责，`#51` / `#32` 由王子昂负责
-- `co-reputation-domain` 目前仍有 3 个红（`BountyAndAccountTest` 的 3 个用例），全部卡在 `Bounty.open`，属 `#47`（kl1h）范围；`co-reputation-application` 14 个测试全绿
+- `#76` 的 PR 等 PO Approve 后合并
+- `#76` 合并后回 `#60` T4-01 Discovery 领域层 7 个方法（`SearchQuery.terms` ×2、`RelatedQuestionPolicy.jaccard`/`rank`、`MentionParser.extract`、`Notification.create`/`markRead`），kl1h 的 `#66`/`#67` 共 23 个方法在等这张卡
+- Sprint 4 用户名下 7 张卡：`#60` → `#62`（管理员禁用会话清理，唯一技术难点）→ `#63`（前端体验升级）→ `#64`（前端页面补齐）→ `#61`（等 kl1h 的 `#66`）→ `#65`（可砍）→ `#76`（本卡）
+- 当前测试基线：143 个测试全绿（`co-shared-kernel` 2 + `co-identity-domain` 9 + `co-qa-domain` 53 + `co-qa-application` 37 + `co-reputation-domain` 15 + `co-reputation-application` 27）；`ArchitectureTest` 1/1。唯一 5 个红在 `co-discovery-domain`，全部卡在 `TODO(S3)`，属 `#60`
 
 ## 已完成
+
+- **2026-11-24**：`#76` Docker 环境统一与基线报告
+  - 装 **Docker Desktop 4.100.0** + **WSL2 3.0.1.0**（内核 6.18.40.1-1）：`wsl --install --no-distribution`，重启后 `winget install Docker.DockerDesktop`
+  - **磁盘镜像搬出 C 盘**：Settings → VM resources → Disk image location → `D:\DockerData\DockerDesktopWSL`（`disk\docker_data.vhdx` 1.46 GB + `main\ext4.vhdx` 0.09 GB）；程序本体仍在 `C:\Program Files\Docker`（3.91 GB，搬不了）
+  - **本机 MySQL 改手动启动**（原 `StartType=Automatic` 会抢 3306）：cmd 里 `sc config MySQL start= demand`，验证 `START_TYPE : 3 DEMAND_START`
+  - 新增 `docs/reports/docker-baseline.md`（368 行）：环境版本、143 个测试结果、15 项扩展检测逐项结论、容器 vs 本地差异、复现步骤，引用 3 张截图
+  - 新增 `docs/reports/screenshots/`（3 张，共 0.94 MB）：`01-docker-version.png`、`02-hello-world.png`、`03-compose-ps.png`
+  - 新增 `http/docker-check.ps1`（UTF-8 with BOM，**17/17 全过 exit 0**）：12 个检查项，含 docker 命令、daemon、WSL2、端口、compose 可解析、三容器 healthy、MySQL 参数与四上下文表、Redis、全文索引、readiness 与 5 个业务指标、前端 200、时区一致性
+  - `docs/开发者须知.md` 新增第 6 节「Docker 环境」（8 个小节：装什么、安装步骤、磁盘迁移、本机 MySQL 处理、常用命令、一键自检、清库重建、8 条报错对照）
+  - `docs/tech-debt.md`：A5（安装 Docker）标 ✅ 已完成；B1（Flyway 兼容性）标 ✅ 已验证——容器 MySQL **8.0.39** 上 5 个迁移全部 `Successfully applied`（2.629 秒），建出 20 张表
+  - **关键结论**：`mvn verify` 的失败原因是**测试断言**而非连接失败——`co-discovery-domain` 的 5 个红全是 `AssertionError: Expecting ... BusinessRuleException but was UnsupportedOperationException: TODO(S3)：SearchQuery.terms 尚未实现`；对全部 surefire 报告扫 `Connection refused|Communications link failure|Unable to acquire JDBC|CannotGetJdbcConnection|ConnectException` **零命中**
+  - **发件箱投递验证**：26 条事件全部 `published`、`pending=0`、`attempts=0`、`last_error=NULL`，覆盖 10 种事件类型（含下游产生的 `BadgeAwardedEvent` 4 条与 `ReputationChangedEvent` 4 条，证明「Q&A 发事件 → 消费 → 记账 → 发新事件」链条通）；端到端实测发问题后 **29.7 毫秒**内投递
+  - **时区一致性**：宿主 UTC / 容器 `date -u` / 容器 `date` / MySQL `NOW()` / MySQL `UTC_TIMESTAMP()` 全部 `2026-11-24 08:06:27~28`，`@@time_zone=+00:00`、`@@system_time_zone=UTC`，`outbox_event.occurred_at` 存 UTC，后端日志带 `Z` → **全链路统一 UTC，无时区错乱**
+  - 踩坑：Docker Hub 的 IPv6 不可达导致拉镜像随机超时（`dial tcp [2a03:...]:443`），必须**先 `docker pull` 预拉再 `build`**，backend 首次 4.1 分钟、web 0.6 分钟
+  - 踩坑：`mysql -p密码` 的 stderr 警告会混进 PowerShell 输出把行解析全打乱（曾误判「共 4 张表」），改用 `docker exec -e MYSQL_PWD=xxx co-mysql mysql -uxxx`
+  - 踩坑：PS 5.1 的 `Invoke-WebRequest.Content` 是 `Byte[]`，`.Trim()` 报 `[System.Byte] does not contain a method named 'Trim'`；已在脚本里加 `Get-ResponseText` 统一解码（同时修好了 prometheus 指标那处的同类隐患）
 
 - **2026-11-17**：`#46` 实现徽章与学期键 5 个方法 + 5 个事件处理器真正记账
   - `AcademicTerm`：`termKey`（2–7 月春季、8–12 月秋季，**次年 1 月仍属上一年秋季**，所以 `2027-01` → `2026-FALL`）、`weekKey`（用 `IsoFields.WEEK_BASED_YEAR` 而非日历年，否则跨年那一周会出错；补零到两位）、`monthKey`（补零）
