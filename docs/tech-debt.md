@@ -9,13 +9,14 @@
 | # | 事项 | 为什么现在不能做 | 什么时候做 | 状态 |
 | --- | --- | --- | --- | --- |
 | A1 | **把 `co-qa/co-qa-domain` 加进 CI 的 `SPRINT_MODULES`** | 该模块还有大量未实现的测试（`AnswerTest`、`VoteAndCommentTest` 等），一加 CI 立刻全红 | 批次 1 的 `#5`~`#8` 全部合并、`mvn test -pl co-qa/co-qa-domain` 全绿之后 | ✅ 2026-11-09（PR #21） |
-| A2 | 把 CI 覆盖扩到 `co-reputation-*`、`co-discovery-*` | 同上，依赖 S2/S3 实现进度 | 批次 4 / 批次 5 | 🟡 Reputation 部分 ✅ 2026-11-18（#49）；`co-discovery-*` 留批次 5 |
+| A2 | 把 CI 覆盖扩到 `co-reputation-*`、`co-discovery-*` | 同上，依赖 S2/S3 实现进度 | 批次 4 / 批次 5 | 🟡 Reputation 部分 ✅ 2026-11-18（#49）；`co-discovery-*` 待办——`#60` 合并后 `co-discovery-domain` 已 63 个测试全绿，可随时纳入 `SPRINT_MODULES`（`co-discovery-application` 见 A9） |
 | A3 | 开启「必须通过状态检查」的分支保护 | 现在后端只跑 S0 范围，等 A1 完成后再开才不会被误拦 | A1 之后 | 待办 |
 | A4 | main 的分支保护从 1 个 Approve 改成 2 个 | 现在 4 个人，2 个会卡住发布 | S4 发布阶段前 | 待办 |
 | A5 | 安装 Docker（WSL2 也未装） | 本机 MySQL/Redis 够用；且 `CampusOverflowFlowIT` 依赖的声誉与搜索功能刚做完，现在装了也跑不绿 | **S4 集成测试前**（Testcontainers 需要，`mvn verify` + FlowIT） | ✅ 2026-11-24（`#76`）：Docker Desktop 4.100.0 + WSL2 3.0.1.0 已装，磁盘镜像迁到 `D:\DockerData`；基线数据见 `docs/reports/docker-baseline.md` |
 | A6 | 删除 `legacy` 与 `docs/team-charter` 旧分支 | 保留着可以回溯旧代码，无成本 | 项目结束时清理 | 待办 |
 | A7 | **提交 `frontend/package-lock.json`**（当前无锁文件，`package.json` 用 `^` 范围，每次 CI 都装当时最新版） | 生成锁文件要本地跑 `npm install`；现在不改也能跑 | Sprint 4 收尾 | 待办（见 B4） |
 | A8 | **已软删除的问题/回答仍可被投票**（**已修**）：`VoteService.resolve` 原本只查存在性，不检查 `isDeleted()`；`QuestionRepositoryAdapter.findById` 也不过滤 `deleted_at` | 任何文档都没定义这条规则，`#26` 卡面也没要求，属既有缺口 | `#46` 已按方案 A 修完：`VoteService.resolve` 把 `isDeleted()` 带进 `Target.deleted`，`cast` 在 `value != 0` 时抛 `BusinessRuleException("QA-1021", "内容已删除，不能再投票")`。**撤销（`value == 0`）放行**——撤销走 `applyScore(-oldValue)` 的减分路径，拦住它会让用户删掉问题后那张票永远撤不回来，`qa_vote` 与 `ReputationAccount` 从此不一致。**没有**在 `on(VoteCastEvent)` 里过滤：那样投票照写进 `qa_vote` 表，只是声誉不变，脏数据留在库里 | 已完成 |
+| A9 | **把 `co-discovery-domain` 加进 CI 的 `SPRINT_MODULES`** | `#60` 实现完 Discovery 领域层后该模块 63 个测试全绿，但不加进 `SPRINT_MODULES` 就**只有本地会跑**，CI 上没人拦得住回归 | `#60` 合并后即可，改动只有 `.github/workflows/ci.yml:27` 一行 | 待办（`#60` 合并后开卡） |
 
 ## B. 待验证的未知项
 

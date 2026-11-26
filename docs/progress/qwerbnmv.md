@@ -1,16 +1,28 @@
 # 代一鸣（qwerbnmv）的进度
 
-最后更新：2026-11-24
-当前任务：`#76` T4-ENV Docker 环境统一（批次 4）
+最后更新：2026-11-26
+当前任务：`#60` T4-01 Discovery 领域层 7 个方法（批次 4）
 状态：待评审
 卡在哪：无
 下一步：
-- `#76` 的 PR 等 PO Approve 后合并
-- `#76` 合并后回 `#60` T4-01 Discovery 领域层 7 个方法（`SearchQuery.terms` ×2、`RelatedQuestionPolicy.jaccard`/`rank`、`MentionParser.extract`、`Notification.create`/`markRead`），kl1h 的 `#66`/`#67` 共 23 个方法在等这张卡
-- Sprint 4 用户名下 7 张卡：`#60` → `#62`（管理员禁用会话清理，唯一技术难点）→ `#63`（前端体验升级）→ `#64`（前端页面补齐）→ `#61`（等 kl1h 的 `#66`）→ `#65`（可砍）→ `#76`（本卡）
-- 当前测试基线：143 个测试全绿（`co-shared-kernel` 2 + `co-identity-domain` 9 + `co-qa-domain` 53 + `co-qa-application` 37 + `co-reputation-domain` 15 + `co-reputation-application` 27）；`ArchitectureTest` 1/1。唯一 5 个红在 `co-discovery-domain`，全部卡在 `TODO(S3)`，属 `#60`
+- `#60` 的 PR 等 PO Approve 后合并
+- `#60` 合并后转 `#62` T4-03 管理员禁用账号与会话清理（本 Sprint 唯一技术难点，PR 里要说明会话清理选方案 A `FindByIndexNameSessionRepository` 还是方案 B `SessionRegistry`）
+- Sprint 4 用户名下剩余：`#61`（等 kl1h 的 `#66`/`#67`）、`#63`、`#64`、`#65`（卡面写明时间紧可整卡不做）
+- 当前测试基线：`co-discovery-domain` 由 5 红转为 **62 个测试全绿**；`ArchitectureTest` 1/1
 
 ## 已完成
+
+- **2026-11-26**：`#60` Discovery 领域层 7 个方法
+  - `SearchQuery.terms()` / `terms(String)`：按 `\s+` 切分、去空串、**先去重再 `limit(MAX_TERMS)`**（若先限流再去重，`@张三 @张三 @李四 @王五 @赵六 @钱七` 会把第 5 个人挤掉）；`keyword == null || isBlank()` 返回 `List.of()`
+  - `RelatedQuestionPolicy.jaccard`：`shared / (sizeA + sizeB - shared)`，分母 `<= 0` 返回 `0.0`
+  - `RelatedQuestionPolicy.rank`：**四级排序** —— Jaccard 降序 → 得分降序 → 已采纳优先 → `questionId` 升序。第四级是稳定性兜底：前三项全并列时 `List.sort` 不保证稳定，分页会重复返回同一条。`candidates == null || isEmpty() || limit <= 0` 返回空
+  - `MentionParser.extract`：`LinkedHashSet` 去重保序，**「满 5 个就停」写在 `while (matcher.find() && mentions.size() < MAX_MENTIONS)` 里**，长评论不必扫到底；`text == null` 返回 `Set.of()`
+  - `Notification.create`：标题 `strip()` 后为空抛 `IllegalArgumentException`（**不是** `BusinessRuleException`）—— 标题由系统拼装、不来自用户输入，为空说明代码缺陷；用业务异常会被 `OutboxRelay` 当可重试错误退避十次进死信，把编码错误伪装成环境问题。超 200 码点**截断而非拒绝**（`dis_notification.title` 是 `VARCHAR(200)`，抛异常会让整条通知丢失、用户收不到提醒）
+  - `Notification.markRead`：**先判权限再判是否已读**。若反过来（已读直接 return），非接收者标记已读通知会「成功」返回，等于泄露「这条通知已读」
+  - 新增 4 个边界测试文件共 **57 个用例**（`SearchQueryBoundaryTest` 17 / `RelatedQuestionPolicyBoundaryTest` 13 / `MentionParserBoundaryTest` 13 / `NotificationBoundaryTest` 14），**原有 `DiscoveryDomainTest` 的 5 个用例一个字没改**
+  - 验证：`co-discovery-domain` `Tests run: 62, Failures: 0, Errors: 0`；`ArchitectureTest` 1/1；本卡范围 TODO 归零（application 层 7 处不归本卡）
+  - `docs/错误码对照表.md`：`DIS-3001` 从「尚未定义的码」移入主表（`DIS-4001` 仍属 application 层的 `NotificationService`，留在未定义表）；唯一码总数 60 → **61**
+
 
 - **2026-11-24**：`#76` Docker 环境统一与基线报告
   - 装 **Docker Desktop 4.100.0** + **WSL2 3.0.1.0**（内核 6.18.40.1-1）：`wsl --install --no-distribution`，重启后 `winget install Docker.DockerDesktop`

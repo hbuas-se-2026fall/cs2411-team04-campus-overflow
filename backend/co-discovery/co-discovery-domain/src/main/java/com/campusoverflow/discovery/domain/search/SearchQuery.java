@@ -36,13 +36,34 @@ public record SearchQuery(String keyword, Long courseId, String tag, SearchSort 
         page = page == null ? new PageRequest(1, 20) : page;
     }
 
+    /**
+     * 返回规范化后的词项列表。没有关键词时返回空列表（调用方无需判空）。
+     *
+     * <p>注意：构造函数在 {@code :26-28} 处已经调用过这个静态方法做「每个词项至少 2 个字符」的校验，
+     * 因此本方法不实现的话，{@code new SearchQuery(...)} 本身就构造不出来。
+     */
     public List<String> terms() {
-        // TODO(S3)：实现 SearchQuery.terms——参考领域单元测试与 arc42 文档中的业务规则
-        throw new UnsupportedOperationException("TODO(S3)：SearchQuery.terms 尚未实现");
+        return terms(keyword);
     }
 
+    /**
+     * 按空白切分关键词并规范化词项：丢弃空串、去重（保留首次出现的位置）、最多保留 {@value MAX_TERMS} 个。
+     *
+     * <p>去重必须在截断之前：先去重再 limit，才能保证「重复词不占名额」。
+     * 例如 {@code "红黑树 红黑树 旋转 平衡 插入 删除"} 得到 5 个互不相同的词项，
+     * 而不是先去重前 5 个再压缩成 4 个。
+     *
+     * <p>用 {@link String#split(String)} 配 {@code \s+} 切分而不是 {@code StringTokenizer}，
+     * 是因为前者对连续空白、首尾空白都按同一个规则处理，配合后面的空串过滤即可。
+     */
     private static List<String> terms(String keyword) {
-        // TODO(S3)：实现 SearchQuery.terms——参考领域单元测试与 arc42 文档中的业务规则
-        throw new UnsupportedOperationException("TODO(S3)：SearchQuery.terms 尚未实现");
+        if (keyword == null || keyword.isBlank()) {
+            return List.of();
+        }
+        return Arrays.stream(keyword.split("\\s+"))
+                .filter(term -> !term.isEmpty())
+                .distinct()
+                .limit(MAX_TERMS)
+                .toList();
     }
 }
