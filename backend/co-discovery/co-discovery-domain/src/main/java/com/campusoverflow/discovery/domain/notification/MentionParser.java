@@ -14,8 +14,27 @@ public final class MentionParser {
     private MentionParser() {
     }
 
+    /**
+     * 从一段文本中提取 @昵称，去重并保持出现顺序，最多返回 {@value MAX_MENTIONS} 个。
+     *
+     * <p>用 {@link LinkedHashSet} 而不是 {@link java.util.HashSet}：通知的发送顺序会影响用户体验
+     * （先被提到的人先收到），也让测试断言稳定可复现。
+     *
+     * <p>「满 5 个就停」在循环里做而不是先收集全部再截断：一条长评论可能有上百个 @，
+     * 提前退出避免无谓的正则扫描。
+     *
+     * <p>注意正则只匹配「@ 后面跟 2–20 个非空白非标点字符」，所以邮箱地址 {@code a@b} 不会被误判
+     * ——它前面的字符不构成合法的昵称（只有 1 个字符），正则要求至少 2 个。
+     */
     public static Set<String> extract(String text) {
-        // TODO(S3)：实现 MentionParser.extract——参考领域单元测试与 arc42 文档中的业务规则
-        throw new UnsupportedOperationException("TODO(S3)：MentionParser.extract 尚未实现");
+        if (text == null || text.isEmpty()) {
+            return Set.of();
+        }
+        Set<String> mentions = new LinkedHashSet<>();
+        Matcher matcher = MENTION.matcher(text);
+        while (matcher.find() && mentions.size() < MAX_MENTIONS) {
+            mentions.add(matcher.group(1));
+        }
+        return mentions;
     }
 }
