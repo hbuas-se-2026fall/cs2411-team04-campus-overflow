@@ -99,6 +99,17 @@ class NotificationBoundaryTest {
                     NOW))
                     .isInstanceOf(NullPointerException.class);
         }
+
+        @Test
+        @DisplayName("now 为 null 时在构造处就拒绝，不会拖到落库才炸")
+        void nullNowIsRejected() {
+            // dis_notification.created_at 是 NOT NULL。若工厂方法放过 null，
+            // 错误要等到 JPA 落库时才爆，异常栈指向 Hibernate 而不是调用方。
+            assertThatThrownBy(() -> Notification.create(RECIPIENT, NotificationType.MENTIONED, "标题", "/q/1", "evt-8",
+                    null))
+                    .isInstanceOf(NullPointerException.class)
+                    .hasMessageContaining("now");
+        }
     }
 
     @Nested

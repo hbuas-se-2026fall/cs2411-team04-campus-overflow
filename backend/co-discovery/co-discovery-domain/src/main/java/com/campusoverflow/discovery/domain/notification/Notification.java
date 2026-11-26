@@ -47,6 +47,7 @@ public class Notification {
     public static Notification create(long recipientId, NotificationType type, String title, String link,
                                       String sourceEventId, Instant now) {
         Objects.requireNonNull(title, "title");
+        Objects.requireNonNull(now, "now");
         String normalizedTitle = title.strip();
         if (normalizedTitle.isEmpty()) {
             throw new IllegalArgumentException("通知标题不能为空");
