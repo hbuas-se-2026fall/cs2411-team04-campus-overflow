@@ -78,7 +78,7 @@ docker compose -f deploy/docker-compose.yml ps     # 期望 co-backend 为 Up (h
 | [`docs/demo-声誉.md`](docs/demo-声誉.md) | 声誉专题演示（每一步的数字变化） |
 | [`docs/用户手册.md`](docs/用户手册.md) | 面向普通用户的操作说明（含真实截图） |
 | [`docs/开发者须知.md`](docs/开发者须知.md) | 环境版本、连接参数、测试基线、教师账号获取、常见报错 |
-| [`docs/错误码对照表.md`](docs/错误码对照表.md) | 60 个业务错误码 → 中文提示 / HTTP / 抛出位置 |
+| [`docs/错误码对照表.md`](docs/错误码对照表.md) | 61 个业务错误码 → 中文提示 / HTTP / 抛出位置 |
 | [`docs/adr/`](docs/adr/README.md) | 架构决策记录（ADR-001 ~ ADR-010） |
 | [`docs/ddd/`](docs/ddd/统一语言.md) | 领域设计文档 |
 | [`docs/交付记录/`](docs/交付记录/README.md) | 按看板卡片归档的截图、终端输出与报告 |
@@ -93,7 +93,7 @@ docker compose -f deploy/docker-compose.yml ps     # 期望 co-backend 为 Up (h
 mvn -B -f backend/pom.xml test -pl "co-shared-kernel,co-identity/co-identity-domain,co-qa/co-qa-domain,co-qa/co-qa-application,co-reputation/co-reputation-domain,co-reputation/co-reputation-application" -am
 
 # 架构约束（必须始终通过）
-mvn -B -f backend/pom.xml test -pl co-bootstrap -am -Dtest=ArchitectureTest
+mvn -B -f backend/pom.xml test -pl co-bootstrap -am -Dtest=ArchitectureTest -Dsurefire.failIfNoSpecifiedTests=false
 
 # 前端类型检查与构建
 cd frontend && npm run typecheck && npm run build

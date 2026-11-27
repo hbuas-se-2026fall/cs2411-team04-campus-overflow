@@ -11,7 +11,7 @@
 ### 1. 清库重建（保证演示数据是干净的）
 
 ```powershell
-cd D:\dev\cs2411-team04-campus-overflow
+cd <你的仓库目录>
 docker compose -f deploy/docker-compose.yml down -v     # 删容器 + 数据卷（仅演示前用，-v 会清空数据）
 docker compose -f deploy/docker-compose.yml up -d
 ```
@@ -165,7 +165,7 @@ co-web      Up
 
 **① 容器起不来，报 `bind: ... access permissions`**
 
-本机 Windows 的 6379 可能落在系统保留端口段（6366–6465）。管理员 PowerShell：
+若你机器上报这个错，可能是 6379 被 Windows 的保留端口段占用（用 `netsh interface ipv4 show excludedportrange protocol=tcp` 查看）。管理员 PowerShell：
 
 ```powershell
 net stop winnat
