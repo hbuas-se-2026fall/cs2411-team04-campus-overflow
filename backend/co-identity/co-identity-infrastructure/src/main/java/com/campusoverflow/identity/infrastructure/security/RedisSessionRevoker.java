@@ -24,6 +24,14 @@ import org.springframework.stereotype.Component;
  * <p>选它而非 {@code SessionRegistry}：{@code SessionRegistryImpl} 是纯内存注册表，
  * 应用一重启就空，重启前登录的会话根本不在表里，禁用时一个也清不掉；而这里直接查 Redis 索引，
  * 重启后依然有效。
+ *
+ * <p><b>已知限制：并发竞态。</b>登录与禁用同时发生时存在一个毫秒级的窗口——若某次登录的
+ * 索引写入晚于本方法的 {@code findByPrincipalName} 扫描，那个会话不会被清掉，
+ * 用户仍可用它访问直到会话自然过期（{@code spring.session.timeout: 30m}）。
+ * 不做每请求校验的原因：那需要在认证链路上每次访问都查一次账号状态，
+ * 与「会话即凭证」的设计相冲突，且会把数据库压力从「登录时一次」放大到「每次请求一次」。
+ * 若要收紧，正确做法是在会话里记录 {@code status} 快照并在定期任务里核对，
+ * 而不是在 {@link #revokeAll} 上继续加逻辑。
  */
 @Component
 public class RedisSessionRevoker implements SessionRevoker {

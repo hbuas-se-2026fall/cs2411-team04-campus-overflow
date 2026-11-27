@@ -16,7 +16,7 @@
 | A6 | 删除 `legacy` 与 `docs/team-charter` 旧分支 | 保留着可以回溯旧代码，无成本 | 项目结束时清理 | 待办 |
 | A7 | **提交 `frontend/package-lock.json`**（当前无锁文件，`package.json` 用 `^` 范围，每次 CI 都装当时最新版） | 生成锁文件要本地跑 `npm install`；现在不改也能跑 | Sprint 4 收尾 | 待办（见 B4） |
 | A8 | **已软删除的问题/回答仍可被投票**（**已修**）：`VoteService.resolve` 原本只查存在性，不检查 `isDeleted()`；`QuestionRepositoryAdapter.findById` 也不过滤 `deleted_at` | 任何文档都没定义这条规则，`#26` 卡面也没要求，属既有缺口 | `#46` 已按方案 A 修完：`VoteService.resolve` 把 `isDeleted()` 带进 `Target.deleted`，`cast` 在 `value != 0` 时抛 `BusinessRuleException("QA-1021", "内容已删除，不能再投票")`。**撤销（`value == 0`）放行**——撤销走 `applyScore(-oldValue)` 的减分路径，拦住它会让用户删掉问题后那张票永远撤不回来，`qa_vote` 与 `ReputationAccount` 从此不一致。**没有**在 `on(VoteCastEvent)` 里过滤：那样投票照写进 `qa_vote` 表，只是声誉不变，脏数据留在库里 | 已完成 |
-| A9 | **把 `co-discovery-domain` 加进 CI 的 `SPRINT_MODULES`** | `#60` 实现完 Discovery 领域层后该模块 63 个测试全绿，但不加进 `SPRINT_MODULES` 就**只有本地会跑**，CI 上没人拦得住回归 | `#60` 合并后即可，改动只有 `.github/workflows/ci.yml:27` 一行 | 待办（`#60` 合并后开卡） |
+| A9 | **把 `co-discovery-domain` 与 `co-identity-application` 加进 CI 的 `SPRINT_MODULES`** | `#60` 实现完 Discovery 领域层后该模块 63 个测试全绿、`#62` 给 `co-identity-application` 新建了 9 个测试，但不加进 `SPRINT_MODULES` 就**只有本地会跑**，CI 上没人拦得住回归 | `#60`/`#62` 都已合并，随时可做，改动只有 `.github/workflows/ci.yml:27` 一行 | 待办（开卡做） |
 
 ## B. 待验证的未知项
 
