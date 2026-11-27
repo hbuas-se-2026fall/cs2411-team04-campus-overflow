@@ -1,16 +1,30 @@
 # 代一鸣（qwerbnmv）的进度
 
-最后更新：2026-11-26
-当前任务：`#60` T4-01 Discovery 领域层 7 个方法（批次 4）
+最后更新：2026-11-27
+当前任务：`#62` T4-03 管理员禁用账号与会话清理（批次 4）
 状态：待评审
 卡在哪：无
 下一步：
-- `#60` 的 PR 等 PO Approve 后合并
-- `#60` 合并后转 `#62` T4-03 管理员禁用账号与会话清理（本 Sprint 唯一技术难点，PR 里要说明会话清理选方案 A `FindByIndexNameSessionRepository` 还是方案 B `SessionRegistry`）
-- Sprint 4 用户名下剩余：`#61`（等 kl1h 的 `#66`/`#67`）、`#63`、`#64`、`#65`（卡面写明时间紧可整卡不做）
-- 当前测试基线：`co-discovery-domain` 由 5 红转为 **62 个测试全绿**；`ArchitectureTest` 1/1
+- `#62` 的 PR 等 PO Approve 后合并
+- `#62` 合并后转 `#64` T4-05 前端页面补齐（管理页 + 个人资料页）：`#62` 的 disable 端点正好给管理页做「禁用」按钮，能配成一段完整演示
+- Sprint 4 用户名下剩余：`#63`（前端体验升级）、`#61`（等 kl1h 的 `#66`/`#67`）、`#65`（卡面写明时间紧可整卡不做）
+- 当前测试基线：`co-identity-domain` **17 个测试全绿**（原 9 + 新增 8）、`co-identity-application` **9 个测试全绿**；`ArchitectureTest` 1/1
 
 ## 已完成
+
+- **2026-11-27**：`#62` 管理员禁用账号与会话清理（PB-40）
+  - **会话清理选方案 A（`FindByIndexNameSessionRepository`）**，理由是重启后仍然有效：`SessionRegistryImpl` 是纯内存注册表，应用一重启就空，重启前登录的会话不在表里，禁用时一个都清不掉；而 `findByPrincipalName` 直接查 Redis 索引，重启后照样查得到
+  - 只需在 `application.yml` 加 **一行** `spring.session.redis.repository-type: indexed`，不用改 `SecurityConfig`、不用加 `@EnableRedisIndexedHttpSession`。反编译 `spring-boot-autoconfigure-3.4.5.jar` 的 `RedisSessionConfiguration$IndexedRedisSessionConfiguration` 确认它带 `@ConditionalOnProperty(prefix="spring.session.redis", name="repository-type", havingValue="indexed")` + `@Import(RedisIndexedHttpSessionConfiguration)`，配了这个属性就会装配
+  - **索引的 principal 是学号/工号不是昵称**：`PrincipalNameIndexResolver` 取 `authentication.getName()`，即 `SecurityUser.getUsername()` 返回的 `username` 字段（`2023001`），而 `toActor()` 用的是 `displayName`。写成 `findByPrincipalName(displayName())` 不会报错，只会永远返回空集合、禁用「看起来成功」但会话没清掉
+  - **不绕道 `SpringSessionBackedSessionRegistry`**：它的 `getAllPrincipals()` 直接 `throw new UnsupportedOperationException`（反编译 `spring-session-core-3.4.3.jar` 确认），拿不到全量 principal
+  - `AdminUserService.disable(Actor, long)`：`load`（不存在抛 `ID-4001`）→ `user.disable(actor)`（领域层已校验管理员身份 `ID-3001` 与「不能禁用自己」`ID-1007`，应用层**不重复校验**）→ `users.save` → `sessions.revokeAll(user.username())` → `audit.record("USER_DISABLED", ...)`
+  - **顺序是「先落库、后清会话」，且清会话失败要抛出去让事务回滚**：会话在 Redis、事务在 MySQL，两者无法真正原子。反过来（先清后落库）一旦落库失败，用户明明还是正常状态却被踢下线；而落库成功、清会话静默失败，则用户已被停用却还能拿旧 Cookie 继续操作，正是本卡要堵的漏洞。选择「宁可禁用失败，也不留下未清理的会话」
+  - `POST /api/v1/admin/users/{userId}/disable` 返 204；`SecurityConfig.java:73` 的 `.requestMatchers("/api/v1/admin/**").hasRole("ADMIN")` 已覆盖，无需改安全配置
+  - 新增领域层 `UserDisableTest` **8 个用例**（权限 4 / 状态迁移 4），覆盖「自禁失败后状态不变」「重复禁用幂等」「非管理员对已禁用用户仍被拒」；新增应用层 `AdminUserServiceDisableTest` **9 个用例**（含「先 save 后清会话」的调用顺序断言、「按 username 不按 displayName 清」、清会话异常必须冒泡），全部手写 Fake、未引入 Mockito，**既有 `UserTest` 6 个用例一个字没改**
+  - 验证：`co-identity-domain` `Tests run: 17, Failures: 0, Errors: 0`；`co-identity-application` `Tests run: 9, Failures: 0, Errors: 0`；`ArchitectureTest` 1/1
+  - 端到端实测（容器环境）：学生 2023002 登录 → 管理员 `POST /admin/users/5/disable` 返回 204 → 学生用原 Cookie 调 `/api/v1/auth/me` 返回 **401** → 学生重新登录也返回 **401**；Redis 里 `co:session:index:...PRINCIPAL_NAME_INDEX_NAME:2023002` 及对应会话键全部消失
+  - `docs/错误码对照表.md`：`AdminUserService` 加方法后行号位移，`ID-3001` 的 `:88` → `:111`、`ID-4001` 的 `:83` → `:106`
+
 
 - **2026-11-26**：`#60` Discovery 领域层 7 个方法
   - `SearchQuery.terms()` / `terms(String)`：按 `\s+` 切分、去空串、**先去重再 `limit(MAX_TERMS)`**（若先限流再去重，`@张三 @张三 @李四 @王五 @赵六 @钱七` 会把第 5 个人挤掉）；`keyword == null || isBlank()` 返回 `List.of()`
@@ -19,8 +33,8 @@
   - `MentionParser.extract`：`LinkedHashSet` 去重保序，**「满 5 个就停」写在 `while (matcher.find() && mentions.size() < MAX_MENTIONS)` 里**，长评论不必扫到底；`text == null` 返回 `Set.of()`
   - `Notification.create`：标题 `strip()` 后为空抛 `IllegalArgumentException`（**不是** `BusinessRuleException`）—— 标题由系统拼装、不来自用户输入，为空说明代码缺陷；用业务异常会被 `OutboxRelay` 当可重试错误退避十次进死信，把编码错误伪装成环境问题。超 200 码点**截断而非拒绝**（`dis_notification.title` 是 `VARCHAR(200)`，抛异常会让整条通知丢失、用户收不到提醒）
   - `Notification.markRead`：**先判权限再判是否已读**。若反过来（已读直接 return），非接收者标记已读通知会「成功」返回，等于泄露「这条通知已读」
-  - 新增 4 个边界测试文件共 **57 个用例**（`SearchQueryBoundaryTest` 17 / `RelatedQuestionPolicyBoundaryTest` 13 / `MentionParserBoundaryTest` 13 / `NotificationBoundaryTest` 14），**原有 `DiscoveryDomainTest` 的 5 个用例一个字没改**
-  - 验证：`co-discovery-domain` `Tests run: 62, Failures: 0, Errors: 0`；`ArchitectureTest` 1/1；本卡范围 TODO 归零（application 层 7 处不归本卡）
+  - 新增 4 个边界测试文件共 **58 个用例**（`SearchQueryBoundaryTest` 17 / `RelatedQuestionPolicyBoundaryTest` 13 / `MentionParserBoundaryTest` 13 / `NotificationBoundaryTest` 15），**原有 `DiscoveryDomainTest` 的 5 个用例一个字没改**
+  - 验证：`co-discovery-domain` `Tests run: 63, Failures: 0, Errors: 0`（58 + 5）；`ArchitectureTest` 1/1；本卡范围 TODO 归零（application 层 7 处不归本卡）
   - `docs/错误码对照表.md`：`DIS-3001` 从「尚未定义的码」移入主表（`DIS-4001` 仍属 application 层的 `NotificationService`，留在未定义表）；唯一码总数 60 → **61**
 
 
