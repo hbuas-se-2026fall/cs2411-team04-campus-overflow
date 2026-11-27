@@ -1,13 +1,13 @@
 # PO（Bugmageddon）的进度
 
-最后更新：2026-11-21
-当前任务：`#68` 质量门禁收口（先做 CODEOWNERS 部分，已提 PR）
-状态：待评审合并
+最后更新：2026-11-27
+当前任务：`#70` Grafana 可观测面板（`#79` 已收尾，已提 PR）
+状态：待开工
 卡在哪：无
 下一步：
-- 等 CODEOWNERS 的 PR 合并
-- 王子昂的 `#80`（容器部署链路修复）是本轮最关键的阻塞点，卡住 `#69`/`#70`/`#78`/`#79` 四张卡
-- `#80` 合并后补完 `#79` 的后端两步，然后开工 `#70` Grafana
+- #70 Grafana：6 个面板，Docker 环境已通、5 个指标都能取到，无阻塞
+- #69 发布 v1.0.0：等 #61~#67 全部合完再做，是最后一步
+- #71 答辩物料：可先攒素材，不必等代码
 
 ## 已完成
 
@@ -33,7 +33,4 @@
 - **2026-11-12**：核实两位成员提出的问题。谢守航的 CI 诊断成立，但他有 3 处误判（① 误以为 PO 是组织 Owner——实为 member，Owner 只有 `BostonMIT`；② 误以为 3000 分钟被本队跑光——实际 63.49 分钟；③ 不必等 CI 恢复才能合并——`protect-develop` 规则集没有 `required_status_checks`）。王子昂对 #31 的 3 条核查全部成立
 - **2026-11-14**：**批次 2 主体完成，Q&A 应用层 TODO 归零**。`co-qa-application` 测试从 4 个涨到 **35 个全绿**（`AnswerAndVoteServiceTest` 5 / `CommentServiceTest` 5 / `QuestionCommandServiceTest` 8 / `VoteServiceTest` 5 / `QaQueryApiImplTest` 3 / `QuestionQueryServiceTest` 9）。9 张卡已合并 7 张（#24–#30），剩 #31（PR #41 待合并）、#32（未开工）。全仓库剩余 `UnsupportedOperationException` **48 个**：Reputation 34 / Discovery 14 / Q&A 0
 - **2026-11-14**：**`#30` CI 纳入 `co-qa-application`**。`.github/workflows/ci.yml` 的 `SPRINT_MODULES` 追加 `co-qa/co-qa-application`，同步更新第 23–26 行注释（批次编号与 `AGENTS.md` 第 9 节对齐）。此前后端 job 的「单元测试（Sprint 范围）」与「覆盖率门禁」两步根本不跑 application 模块的 35 个测试。已核对 `co-qa-application/pom.xml` 未声明 jacoco `check`，加入后不会因覆盖率阈值变红
-
-
-
-
+- **2026-11-27**：`#79` Docker 环境验收完成（本卡关闭）。在 Ubuntu 24.04 虚拟机（VMware Workstation 17）里从零搭好环境：中科大源 → `openjdk-21-jdk` + `maven` → `docker-ce 29.10.0` + `compose-plugin 5.8.0` → `daemon.json` 配 `docker.m.daocloud.io` 镜像加速 → clone → `docker compose up -d --build`（537 秒，6/6 全绿）。7 条验收标准逐条实测：`hello-world` 输出正常；6 容器 healthy（mysql/redis/backend/web + prometheus/grafana）；四个地址全通（`localhost` / `:8080/actuator/health/readiness` / `:9090/targets` 的 `campus-overflow-backend` 为 UP / `:3000`）；`/actuator/prometheus` 能取到 5 个指标（4 个 `co_outbox_*` + `co_reputation_mismatches`）；`docs/tech-debt.md` 的 A5 已由 `#76` 的 PR 更新。10 张截图存 `docs/交付记录/Bugmageddon/T4-ENV-docker-env/`，已随 PR #85 合并。**口径说明**：验收标准第 5 条写「`co_outbox_*` 5 个指标」，实际代码里 `co_outbox_*` 只有 4 个（`OutboxRelay.java:68-71`），第 5 个是 `co_reputation_mismatches`（`ReputationJobs.java:26`），前缀不同；截图 `10-all-5-metrics.png` 拍的是全部 5 个
