@@ -32,6 +32,14 @@ spring:
     timeout: 30m
     redis:
       namespace: co:session
+      # indexed：会话仓库换成 RedisIndexedSessionRepository（实现 FindByIndexNameSessionRepository），
+      # 支持按登录名反查并清理某人的全部会话（管理员禁用账号后立即下线，见 T4-03）。
+      # 不写则用默认的 RedisSessionRepository，只有按 sessionId 存取的能力。
+      # 副作用：Redis 里会多出索引键，完整形态是
+      #   co:session:index:org.springframework.session.FindByIndexNameSessionRepository.PRINCIPAL_NAME_INDEX_NAME:<username>
+      # 其中 <username> 是登录名（学号/工号，如 2023001），不是昵称；
+      # 切换前已存在的会话不在索引里，部署后需重新登录（或清一次 Redis）。
+      repository-type: indexed
   jackson:
     serialization:
       write-dates-as-timestamps: false

@@ -28,14 +28,16 @@ public class AdminUserService {
     private final PasswordHasher hasher;
     private final IntegrationEventPublisher events;
     private final AuditTrail audit;
+    private final SessionRevoker sessions;
     private final Clock clock;
 
     public AdminUserService(UserRepository users, PasswordHasher hasher, IntegrationEventPublisher events,
-                            AuditTrail audit, Clock clock) {
+                            AuditTrail audit, SessionRevoker sessions, Clock clock) {
         this.users = users;
         this.hasher = hasher;
         this.events = events;
         this.audit = audit;
+        this.sessions = sessions;
         this.clock = clock;
     }
 
@@ -77,6 +79,35 @@ public class AdminUserService {
         user.changeRole(actor, role);
         users.save(user);
         audit.record("ROLE_CHANGED", actor.userId(), "USER", String.valueOf(userId), old + " -> " + role);
+    }
+
+    /**
+     * 禁用违规账号，并立即让其既有会话失效。
+     *
+     * <p>权限与「不能禁用自己」两条规则由 {@code User.disable} 负责，这里<b>不重复校验</b>，
+     * 否则错误码会在领域层与应用层各出现一次，将来改规则容易只改一处。
+     *
+     * <p>顺序是「先保存、后清会话」，且清会话失败要抛出去让事务回滚。反过来（先清会话再保存）
+     * 一旦保存失败，用户明明还在正常状态，却被踢下线了——虽然不危险但很难解释；
+     * 而保存成功、清会话静默失败，则用户已被停用却还能拿旧 Cookie 继续操作，正是本卡要堵的漏洞。
+     * 会话在 Redis、事务在 MySQL，两者无法真正原子，这里选择「宁可禁用失败，也不留下未清理的会话」。
+     *
+     * <p><b>注意这里说的「保存」不等于「已写入数据库」</b>：{@code users.save(user)} 最终走
+     * {@code EntityManager.merge}，对已托管的实体只登记脏字段，UPDATE 语句要到事务提交时才发出。
+     * 也就是说 {@code sessions.revokeAll(...)} 执行时，数据库里的 {@code status} 还是 {@code ACTIVE}。
+     * 若此刻之后的提交阶段失败（连接断开、乐观锁冲突、约束冲突等），结果是「会话已清、状态未变」，
+     * 与上面刻意避免的那个分支同形。这个窗口无法靠调整语句顺序消除——只要跨两个存储，
+     * 就不存在同时提交的手段。要彻底消除需要引入本地消息表或两阶段提交，成本远超本卡范围。
+     * 因此本方法的保证是「清会话失败会让状态回滚」，而<b>不是</b>「状态变更与会话清理必然同时生效」。
+     */
+    @Transactional
+    public void disable(Actor actor, long userId) {
+        User user = load(userId);
+        user.disable(actor);
+        users.save(user);
+        int revoked = sessions.revokeAll(user.username());
+        audit.record("USER_DISABLED", actor.userId(), "USER", String.valueOf(userId),
+                revoked > 0 ? "已清理会话 " + revoked + " 个" : null);
     }
 
     private User load(long userId) {
