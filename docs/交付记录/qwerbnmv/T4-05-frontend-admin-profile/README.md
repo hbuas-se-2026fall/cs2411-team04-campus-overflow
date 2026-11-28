@@ -46,7 +46,7 @@ npm run dev            # http://localhost:5173
 
 | # | 验收标准 | 结果 | 证据 |
 | --- | --- | --- | --- |
-| 1 | `npm run typecheck` / `npm run build` 均 exit=0 | ✅ | `tsc --noEmit` exit=0；`tsc -b && vite build` exit=0，45 modules，dist 188.13 kB / gzip 60.86 kB |
+| 1 | `npm run typecheck` / `npm run build` 均 exit=0 | ✅ | `tsc --noEmit` exit=0；`tsc -b && vite build` exit=0，45 modules，`dist/assets/index-D4fgepZA.js` 188.07 kB / gzip 60.85 kB |
 | 2 | 管理页：待认证列表 + 认证 + 创建教职工 | ✅ | `01-admin-pending-list.png` + `06-admin-actions-done.png` |
 | 3 | 非管理员访问 `/admin` 显示「无权访问」 | ✅ | `05-admin-forbidden.png` |
 | 4 | 资料页：查看 + 改昵称/学院/班级 + 刷新仍生效 | ✅ | `02` → `03` → `04` |
