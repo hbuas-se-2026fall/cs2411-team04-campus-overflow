@@ -25,10 +25,12 @@ import org.junit.jupiter.api.Test;
 /**
  * {@code UserCommandService.updateProfile} 的用例测试（T4-05）。
  *
- * <p>全部依赖手写 Fake，不引入 Mockito。重点覆盖三件事：
+ * <p>全部依赖手写 Fake，不引入 Mockito。重点覆盖四件事：
  * ① 三个字段都能落库（用 Fake 的 store 反查，而不是只看返回值）；
- * ② 昵称重名判定不能把自己算成「别人占用」——这是本方法唯一容易写错的地方；
- * ③ 学号/角色/认证状态不可能被改（{@link UpdateProfileCommand} 根本没有这些字段，靠编译期保证）。
+ * ② <b>部分更新语义</b>：{@code null} 保留现值、空串清空，两者不能混为一谈
+ *    （见 {@link #nullDisplayNameMeansKeepCurrentNicknameNotClear} 等 4 个用例）；
+ * ③ 昵称重名判定不能把自己算成「别人占用」——这是本方法唯一容易写错的地方；
+ * ④ 学号/角色/认证状态不可能被改（{@link UpdateProfileCommand} 根本没有这些字段，靠编译期保证）。
  */
 class UserCommandServiceUpdateProfileTest {
 
@@ -91,6 +93,75 @@ class UserCommandServiceUpdateProfileTest {
 
         assertThat(users.store.get(10L).displayName()).isEqualTo("小明");
         assertThat(users.store.get(10L).className()).isEqualTo("软工2302");
+    }
+
+    @Test
+    void nullDisplayNameMeansKeepCurrentNicknameNotClear() {
+        persisted("2023000001", "小明", 10);
+
+        // 部分更新语义：只传学院，昵称传 null 表示「本次不改」，而不是「清空」
+        service.updateProfile(alice, new UpdateProfileCommand(null, "信息工程学院", null));
+
+        User after = users.store.get(10L);
+        assertThat(after.displayName()).isEqualTo("小明");
+        assertThat(after.college()).isEqualTo("信息工程学院");
+        assertThat(after.className()).isEqualTo("计科2301");
+    }
+
+    @Test
+    void nullCollegeAndClassNameKeepCurrentValuesNotClear() {
+        persisted("2023000001", "小明", 10);
+
+        // 只改昵称：学院/班级传 null 必须沿用现值（注册时是「计算机工程学院」「计科2301」）
+        service.updateProfile(alice, new UpdateProfileCommand("小明同学", null, null));
+
+        User after = users.store.get(10L);
+        assertThat(after.displayName()).isEqualTo("小明同学");
+        assertThat(after.college()).isEqualTo("计算机工程学院");
+        assertThat(after.className()).isEqualTo("计科2301");
+    }
+
+    @Test
+    void allNullKeepsEverythingButStillWritesAudit() {
+        persisted("2023000001", "小明", 10);
+
+        // 三个字段全 null 是一次「空更新」：不改任何值，但仍然落一条审计，便于排查调用方误发空请求
+        service.updateProfile(alice, new UpdateProfileCommand(null, null, null));
+
+        User after = users.store.get(10L);
+        assertThat(after.displayName()).isEqualTo("小明");
+        assertThat(after.college()).isEqualTo("计算机工程学院");
+        assertThat(after.className()).isEqualTo("计科2301");
+        assertThat(audit.records).hasSize(1);
+    }
+
+    @Test
+    void emptyStringStillClearsWhileNullKeeps() {
+        persisted("2023000001", "小明", 10);
+
+        // 同一次请求里演示两种语义：学院传 null → 保留；班级传空串 → 清空
+        service.updateProfile(alice, new UpdateProfileCommand(null, null, ""));
+
+        User after = users.store.get(10L);
+        assertThat(after.college()).isEqualTo("计算机工程学院");
+        assertThat(after.className()).isNull();
+    }
+
+    @Test
+    void emptyStringNicknameIsRejectedByDomainRuleNotCleared() {
+        persisted("2023000001", "小明", 10);
+
+        // 昵称不像学院/班级那样「空串即清空」：它是必填字段，空串必须走领域层的 ID-1002。
+        // 这条同时锁住「接口层不再加 @Size」——若加了，空串会被 Bean Validation 拦成 400
+        // SYS-400-VALIDATION，同一个规则出现两种错误码。
+        assertThatThrownBy(() -> service.updateProfile(alice, new UpdateProfileCommand("", "信息工程学院", null)))
+                .isInstanceOf(com.campusoverflow.shared.domain.BusinessRuleException.class)
+                .hasMessageContaining("昵称");
+
+        // 整笔事务不落地：昵称仍是旧值，学院也没被改
+        User after = users.store.get(10L);
+        assertThat(after.displayName()).isEqualTo("小明");
+        assertThat(after.college()).isEqualTo("计算机工程学院");
     }
 
     @Test

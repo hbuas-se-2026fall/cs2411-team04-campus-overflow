@@ -50,7 +50,7 @@ npm run dev            # http://localhost:5173
 | 2 | 管理页：待认证列表 + 认证 + 创建教职工 | ✅ | `01-admin-pending-list.png` + `06-admin-actions-done.png` |
 | 3 | 非管理员访问 `/admin` 显示「无权访问」 | ✅ | `05-admin-forbidden.png` |
 | 4 | 资料页：查看 + 改昵称/学院/班级 + 刷新仍生效 | ✅ | `02` → `03` → `04` |
-| 5 | 后端应用层至少 2 个测试 | ✅ | `UserCommandServiceUpdateProfileTest` **8 个用例**（要求 2 个） |
+| 5 | 后端应用层至少 2 个测试 | ✅ | `UserCommandServiceUpdateProfileTest` **13 个用例**（要求 2 个） |
 | 6 | `mvn -B -f backend/pom.xml test -pl co-identity/co-identity-application -am` | ✅ | 见下方输出 |
 | 7 | 不改已有断言 / 不删测试 / 不加 `@Disabled` | ✅ | 本卡只新增测试文件，`git diff` 未触及任何既有测试 |
 | 8 | `ArchitectureTest` FF-1~FF-6 | ✅ | `Tests run: 1, Failures: 0, Errors: 0` |
@@ -62,15 +62,15 @@ mvn -B -o -f backend/pom.xml test -pl co-identity/co-identity-application -am
 
 co-shared-kernel          Tests run: 2,  Failures: 0, Errors: 0
 co-identity-domain        Tests run: 17, Failures: 0, Errors: 0
-co-identity-application   Tests run: 17, Failures: 0, Errors: 0
+co-identity-application   Tests run: 22, Failures: 0, Errors: 0
   AdminUserServiceDisableTest          9
-  UserCommandServiceUpdateProfileTest  8
+  UserCommandServiceUpdateProfileTest  13
 BUILD SUCCESS
 ```
 
 ```
 mvn -B -o -f backend/pom.xml test -pl co-bootstrap -am -Dtest=ArchitectureTest
-Tests run: 1, Failures: 0, Errors: 0, Time elapsed: 4.082 s
+Tests run: 1, Failures: 0, Errors: 0, Time elapsed: 4.962 s
 BUILD SUCCESS
 ```
 
@@ -82,19 +82,22 @@ BUILD SUCCESS
 | --- | --- | --- |
 | 路径 | `/api/v1/auth/me`，不新建 Controller | URL 里不带用户 id，方法签名也就没有「改谁」这个参数，从接口层面杜绝越权改他人资料 |
 | 返回 | 204 空响应 | 前端提交成功后本来就要重拉 `/auth/me` 刷新全局状态，返回体用不上；少一处数据契约也少一处与 `MeView` 同步的负担 |
+| 更新语义 | **部分更新**：`null` = 本次不改，空串 = 清空 | 调用方（移动端/脚本/第三方集成）很难保证每次都带全三个字段；「缺省即清空」的语义下少传一个字段就等于静默删掉用户资料。显式清空的能力没丢，传空串即可。`UserCommandService.keepIfAbsent` 负责把 `null` 换成库里现值 |
 | 可改字段 | 仅 `displayName` / `college` / `className` | `username` / `email` / `passwordHash` / `createdAt` / `version` 仍是 `final`，`role` / `verified` 不在 `User.updateProfile` 内 —— 改不了的字段在领域对象上就没有赋值路径 |
-| 昵称校验 | 复用 `checkDisplayName`，错误码 `ID-1002` | 与注册时的 2–20 字、不含 `@`/空格规则完全一致 |
-| 昵称唯一 | 应用层 `UserCommandService.java:52`，错误码 `ID-2002` | 用 `findByDisplayName` 再比 id，而不是 `existsByDisplayName` —— 后者分不清「被别人占了」和「就是我自己」，只改学院、昵称原样提交也会被判成重名 |
+| 昵称校验 | 复用 `checkDisplayName`，错误码 `ID-1002` | 与注册时的 2–20 字、不含 `@`/空格规则完全一致。`ProfileUpdateRequest` **故意不加** `@Size`：加了会让「昵称太短」出现两种失败方式（空串走 400 `SYS-400-VALIDATION`、过短值走 422 `ID-1002`），去掉后领域层是唯一出口 |
+| 昵称唯一 | 应用层 `UserCommandService.java:58`，错误码 `ID-2002` | 用 `findByDisplayName` 再比 id，而不是 `existsByDisplayName` —— 后者分不清「被别人占了」和「就是我自己」，只改学院、昵称原样提交也会被判成重名 |
+| 学院/班级长度 | `@Size(max = 50)` 留在 `ProfileUpdateRequest` 上 | 领域层 `User.optional(value, 50)` 对超长值是**静默截断**而非报错，没有错误码可统一。留在这里报 400，比悄悄截掉用户输入的 10 个字要好 |
 | 空白处理 | `optional(value, 50)` 归一成 `null` | 否则「未填写」会有 `''` 和 `NULL` 两种表示 |
-| 审计 | `audit.record("PROFILE_UPDATED", actor.userId(), "USER", ..., user.displayName())` | 只写审计、不发领域事件：昵称变更不影响任何聚合的一致性，检索与通知都在读取时实时联表取 `displayName` |
+| 审计 | `audit.record("PROFILE_UPDATED", actor.userId(), "USER", ..., user.displayName())` | 只写审计、不发领域事件：昵称变更不影响任何聚合的一致性，检索与通知都在读取时实时联表取 `displayName`。三字段全 `null` 的空更新也会落一条审计，便于排查调用方误发空请求 |
 
 ### 前端
 
 - 管理页 `frontend/src/pages/AdminPage.tsx`：三个区块一一对应 `AdminUserController` 的端点。认证成功后**重新拉一次列表**而不是本地删行 —— 本地删行会掩盖「其实没保存成功」这类问题。
 - **`me.role === 'ADMIN'` 判断不是安全边界**，真正的授权在 `SecurityConfig.java:73` 的 `hasRole("ADMIN")`，后端每次都会再校验；前端这层只为不把必然 403 的页面摆到学生面前。
-- 资料页 `frontend/src/pages/ProfilePage.tsx`：学号/角色/认证状态/邮箱只展示不可编辑；保存成功后 `await refresh()` 刷新全局 `me`，否则顶栏昵称不更新、用户会以为没保存成功；`dirty` 判断让「没有任何改动」时保存按钮禁用。
+- 资料页 `frontend/src/pages/ProfilePage.tsx`：学号/角色/认证状态/邮箱只展示不可编辑；保存成功后 `await refresh()` 刷新全局 `me`，否则顶栏昵称不更新、用户会以为没保存成功；`dirty` 判断让「没有任何改动」时保存按钮禁用。表单的 `useEffect` 依赖故意只写 `[me]` 而不是三个字段：`AuthProvider` 每次 refresh 都换新对象，只在「拉到了新数据」时触发；若拆成三个字段，用户正在输入时恰好有一次 refresh 把值改回旧值，依赖判定「没变」不重跑，输入框会停在旧值上。
 - `api.ts` 的 `describeError(e)`：`ApiError` 自带中文 `detail` 直接用；网络中断拿到的是英文 `TypeError("Failed to fetch")`，统一换成中文兜底。
 - 导航：`/profile` 所有登录用户可见，`/admin` 仅 `me.role === 'ADMIN'` 可见。
+- `api.ts` 的管理端方法只保留本页实际调用的三个（`adminUsers` / `adminVerify` / `adminCreateStaff`）。`#62` 的禁用端点暂无 UI 入口，对应方法不提前定义 —— 等做禁用按钮那张卡时再加，避免出现定义了却没人调用的死代码。
 
 ## 五、复现步骤
 

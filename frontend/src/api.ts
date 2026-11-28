@@ -103,7 +103,6 @@ export const api = {
   adminCreateStaff: (body: {
     username: string; displayName: string; email: string; password: string; role: Role; college?: string;
   }) => request<{ id: number }>('POST', '/v1/admin/users', body),
-  adminDisable: (userId: number) => request<void>('POST', `/v1/admin/users/${userId}/disable`, {}),
 
   notifications: () => get<Page<Notification>>('/v1/notifications'),
   unreadCount: () => get<{ count: number }>('/v1/notifications/unread-count'),

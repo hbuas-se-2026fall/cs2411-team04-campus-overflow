@@ -20,8 +20,10 @@ export function ProfilePage() {
   const [error, setError] = useState('');
   const [saved, setSaved] = useState('');
 
-  // me 是全局状态，可能在本页挂载后才被 AuthProvider 拉到；每次变化都同步一次表单初值。
-  // 依赖里带上三个字段本身，避免「刷新 me 但值没变」时把用户正在输入的内容覆盖掉。
+  // me 是全局状态，可能在本页挂载后才被 AuthProvider 拉到，所以要跟着 me 的变化同步表单初值。
+  // 依赖故意只写 [me]：AuthProvider 每次 refresh 都换一个新对象，只在「拉到了新数据」时才触发；
+  // 若拆成 [me.displayName, me.college, me.className]，用户正在输入时恰好有一次 refresh 把值
+  // 改回旧值，依赖数组判定「没变」不重跑，输入框就会停在旧值上。宁可多覆盖一次。
   useEffect(() => {
     if (!me) return;
     setDisplayName(me.displayName);
