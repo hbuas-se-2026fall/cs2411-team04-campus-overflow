@@ -25,14 +25,14 @@ public class User {
 
     private Long id;
     private final String username;
-    private final String displayName;
+    private String displayName;
     private final String email;
     private final String passwordHash;
     private Role role;
     private UserStatus status;
     private boolean verified;
-    private final String college;
-    private final String className;
+    private String college;
+    private String className;
     private final Instant createdAt;
     private final long version;
 
@@ -103,6 +103,24 @@ public class User {
             throw new BusinessRuleException("ID-1007", "不能禁用自己的账号");
         }
         this.status = UserStatus.DISABLED;
+    }
+
+    /**
+     * 本人修改自己的资料。只允许改昵称、学院、班级——学号/工号、角色、认证状态、邮箱都不在此列，
+     * 它们分别属于身份、（管理员的）授权与认证流程，改错影响面远超「个人资料」。
+     *
+     * <p>昵称复用 {@link #checkDisplayName}，所以长度（2–20）与字符（不含 {@code @} 和空格）规则
+     * 与注册时完全一致，错误码同为 {@code ID-1002}。学院/班级复用 {@link #optional}，
+     * 空白字符串归一成 {@code null}——前端把输入框清空提交 '' 时，库里应该是 {@code NULL} 而不是空串，
+     * 否则「未填写」会有 '' 和 NULL 两种表示，查询与展示都得写两遍判断。
+     *
+     * <p><b>昵称唯一性由调用方（应用层）用 {@code UserRepository} 校验</b>：领域对象看不到仓储。
+     * 这里只做格式校验。
+     */
+    public void updateProfile(String newDisplayName, String newCollege, String newClassName) {
+        this.displayName = checkDisplayName(newDisplayName);
+        this.college = optional(newCollege, 50);
+        this.className = optional(newClassName, 50);
     }
 
     public boolean canLogin() {

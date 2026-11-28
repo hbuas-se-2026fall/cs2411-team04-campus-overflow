@@ -1,16 +1,35 @@
 # 代一鸣（qwerbnmv）的进度
 
-最后更新：2026-11-27
-当前任务：`#62` T4-03 管理员禁用账号与会话清理（批次 4）
+最后更新：2026-11-28
+当前任务：`#64` T4-05 前端页面补齐：管理页 + 个人资料页（批次 4）
 状态：待评审
 卡在哪：无
 下一步：
-- `#62` 的 PR 等 PO Approve 后合并
-- `#62` 合并后转 `#64` T4-05 前端页面补齐（管理页 + 个人资料页）：`#62` 的 disable 端点正好给管理页做「禁用」按钮，能配成一段完整演示
-- Sprint 4 用户名下剩余：`#63`（前端体验升级）、`#61`（等 kl1h 的 `#66`/`#67`）、`#65`（卡面写明时间紧可整卡不做）
-- 当前测试基线：`co-identity-domain` **17 个测试全绿**（原 9 + 新增 8）、`co-identity-application` **9 个测试全绿**；`ArchitectureTest` 1/1
+- `#64` 的 PR 等 PO Approve 后合并
+- 合并后转 `#63` T4-04 前端体验升级（分页 / 骨架屏 / 重试 / Markdown）
+- Sprint 4 用户名下剩余：`#61`（等 kl1h 的 `#66`/`#67` 解除阻塞）、`#65`（卡面写明时间紧可整卡不做）
+- 当前测试基线：`co-identity-domain` **17 个测试全绿**、`co-identity-application` **22 个测试全绿**（`AdminUserServiceDisableTest` 9 + `UserCommandServiceUpdateProfileTest` 13）；`ArchitectureTest` 1/1
 
 ## 已完成
+
+- **2026-11-28**：`#64` 前端页面补齐：管理页 + 个人资料页（PB-47 / PB-41）
+  - **后端 `PUT /api/v1/auth/me` 的路径选 `/auth/me` 而非 `/users/{id}`**：URL 里不带用户 id，方法签名也就没有「改谁」这个参数，从接口层面杜绝越权改他人资料，不需要再写一遍「id 是不是你自己」的校验
+  - **`PUT /auth/me` 采用部分更新语义**：`null` = 本次不改这一项，空串 = 清空。最初的实现把 `null` 同时当成「清空」（学院/班级）和「不能为空」（昵称），导致「只传学院」既会 422 又会把学院/班级清空——评审指出文档与实现矛盾后改为部分更新，`UserCommandService.keepIfAbsent` 负责把 `null` 换成库里现值。选部分更新而非整表替换的理由：调用方（移动端/脚本/第三方集成）很难保证每次都带全三个字段，「缺省即清空」下少传一个字段就等于静默删掉用户资料
+  - `AuthController.updateProfile` 返 **204 而不是新的 `MeView`**：前端提交成功后本来就要重新拉 `/auth/me` 刷新 `auth.tsx` 里的全局状态（否则顶栏还显示旧昵称），返回体用不上；少一处数据契约也少一处与 `MeView` 同步的负担
+  - `User.updateProfile` 只改昵称 / 学院 / 班级三个字段，`username` / `role` / `verified` / `email` 仍是 `final` 或不在方法内——**改不了的字段在领域对象上就没有赋值路径**，比在应用层做白名单更可靠
+  - **昵称唯一性放应用层而不是领域层**：领域对象看不到仓储。`UserCommandService.updateProfile` 用 `findByDisplayName` 再比 id，而**不是** `existsByDisplayName`——后者分不清「被别人占了」和「就是我自己」，用户只改学院、昵称原样提交也会被判成重名（`ID-2002`）
+  - `User.updateProfile` 复用 `checkDisplayName`，所以长度（2–20）与字符（不含 `@`/空格）规则、错误码 `ID-1002` 与注册时**完全一致**；学院/班级复用 `optional(value, 50)`，空白字符串归一成 `null`，否则「未填写」会有 `''` 和 `NULL` 两种表示
+  - **`ProfileUpdateRequest.displayName` 故意不加 `@Size`**：加了会让「昵称太短」出现两种失败方式——空串被 Bean Validation 拦成 400 `SYS-400-VALIDATION`、过短值走领域层得到 422 `ID-1002`，前端得为同一个问题处理两套码。去掉后领域层是唯一出口。`college`/`className` 的 `@Size(max = 50)` 反而保留：领域层 `User.optional` 对超长值是**静默截断**而非报错，没有错误码可统一，留在这里报 400 比悄悄截掉用户输入要好
+  - **只写审计 `PROFILE_UPDATED`、不发领域事件**：昵称变更不影响任何聚合的一致性，检索与通知都在读取时实时联表取 `displayName`，没有需要同步的物化副本
+  - 管理页 `frontend/src/pages/AdminPage.tsx`：三个区块对应 `AdminUserController` 的端点（待认证列表 / 认证 / 创建教职工）。认证成功后**重新拉一次列表**而不是本地删行——本地删行会掩盖「其实没保存成功」这类问题
+  - **前端的 `me.role === 'ADMIN'` 判断不是安全边界**，真正的授权在 `SecurityConfig.java:73` 的 `hasRole("ADMIN")`，后端每次都会再校验；前端这层只为不把必然 403 的页面摆到学生面前。非管理员访问 `/admin` 显示「无权访问」而非白屏
+  - 个人资料页 `frontend/src/pages/ProfilePage.tsx`：学号/角色/认证状态/邮箱只展示不可编辑；保存成功后 `await refresh()` 刷新全局 `me`，否则顶栏昵称不更新、用户会以为没保存成功；`dirty` 判断让「没有任何改动」时保存按钮禁用。表单 `useEffect` 依赖故意只写 `[me]` 而非三个字段——`AuthProvider` 每次 refresh 都换新对象，只在「拉到新数据」时触发；若拆成三个字段，用户正在输入时恰好有一次 refresh 把值改回旧值，依赖判定「没变」不重跑，输入框会停在旧值上
+  - `api.ts` 新增 `describeError(e)`：`ApiError` 自带中文 `detail` 直接用；网络中断拿到的是 `TypeError("Failed to fetch")`，英文且面向开发者，统一换成中文兜底
+  - 导航：`/profile` 所有登录用户可见，`/admin` 仅 `me.role === 'ADMIN'` 可见
+  - `api.ts` 的管理端方法只保留本页实际调用的三个（`adminUsers` / `adminVerify` / `adminCreateStaff`）：`#62` 的禁用端点暂无 UI 入口，对应方法不提前定义，等做禁用按钮那张卡时再加，避免出现定义了却没人调用的死代码
+  - 验证：`tsc --noEmit` exit=0、`tsc -b && vite build` exit=0（45 modules，dist 188.07 kB / gzip 60.85 kB）；`co-identity-application` **Tests run: 22, Failures: 0, Errors: 0**；`co-identity-domain` 17 全绿；`ArchitectureTest` 1/1
+  - 新增 `UserCommandServiceUpdateProfileTest` **13 个用例**（成功更新三字段 / 审计内容 / 昵称原样提交不算重名 / **昵称传 null 保留现值** / **学院班级传 null 保留现值** / **三字段全 null 不改值但仍写审计** / **同请求内 null 保留与空串清空并存** / **昵称空串走 `ID-1002` 而非 400 且整笔不落地** / 昵称被他人占用被拒 / 昵称过短走 `ID-1002` / 空白学院班级变 null / 陌生 actor 被拒 / 不动 username·role·verified），手写 Fake 未引入 Mockito，**既有测试一个断言都没改**
+  - `docs/错误码对照表.md`：`User.java` 加方法后行号位移，`ID-1001` `:127`→`:145`、`ID-1002` `:133`/`:135`→`:151`/`:153`、`ID-1003` `:142`→`:160`、`ID-3001` `:121`→`:139`；`ID-2002` 与 `ID-4001` 各增一处抛出位置（`UserCommandService.java:58` / `:52`），相关批次列改为「批次 1、批次 4」并在备注里写清哪处属哪批次
 
 - **2026-11-27**：`#62` 管理员禁用账号与会话清理（PB-40）
   - **会话清理选方案 A（`FindByIndexNameSessionRepository`）**，理由是重启后仍然有效：`SessionRegistryImpl` 是纯内存注册表，应用一重启就空，重启前登录的会话不在表里，禁用时一个都清不掉；而 `findByPrincipalName` 直接查 Redis 索引，重启后照样查得到
