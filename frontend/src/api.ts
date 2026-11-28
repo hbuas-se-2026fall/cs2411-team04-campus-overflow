@@ -1,6 +1,6 @@
 import type {
-  LedgerEntry, LeaderboardEntry, Me, Notification, Page, QuestionDetail, QuestionSummary, ReputationProfile,
-  SearchResult,
+  AdminUserRow, LedgerEntry, LeaderboardEntry, Me, Notification, Page, QuestionDetail, QuestionSummary,
+  ReputationProfile, Role, SearchResult,
 } from './types';
 
 /** 后端以 RFC 9457 Problem Details 返回错误，这里统一转成带业务码的异常。 */
@@ -8,6 +8,18 @@ export class ApiError extends Error {
   constructor(readonly status: number, readonly code: string, message: string) {
     super(message);
   }
+}
+
+/**
+ * 把任意抛出物转成一句能直接显示给用户的话。
+ *
+ * <p>后端 `ApiError` 自带中文 `detail`，直接用；网络中断、响应体不是 JSON 之类的情况拿到的是
+ * `TypeError`/`SyntaxError`，其 message 是英文且面向开发者（"Failed to fetch"），不能原样丢给用户，
+ * 所以统一换成一句中文兜底。
+ */
+export function describeError(e: unknown): string {
+  if (e instanceof ApiError) return e.message;
+  return '请求失败，请检查网络后重试';
 }
 
 function cookie(name: string): string | undefined {
@@ -47,6 +59,8 @@ export const api = {
   login: (username: string, password: string) => request<Me>('POST', '/v1/auth/login', { username, password }),
   logout: () => request<void>('POST', '/v1/auth/logout'),
   me: () => get<Me>('/v1/auth/me'),
+  updateProfile: (body: { displayName?: string; college?: string; className?: string }) =>
+    request<void>('PUT', '/v1/auth/me', body),
 
   questions: (page = 1, courseId?: number) =>
     get<Page<QuestionSummary>>(`/v1/questions?page=${page}${courseId ? `&courseId=${courseId}` : ''}`),
@@ -81,6 +95,15 @@ export const api = {
     get<Page<LedgerEntry>>(`/v1/users/${userId}/reputation/ledger?page=${page}&size=${size}`),
   bounty: (questionId: number, points: number, days: number) =>
     request<{ id: number }>('POST', `/v1/questions/${questionId}/bounty`, { points, days }),
+
+  // 管理页（仅 ADMIN 可用；URL 级授权在 SecurityConfig 的 hasRole ADMIN）
+  adminUsers: (verified = false, page = 1, size = 20) =>
+    get<Page<AdminUserRow>>(`/v1/admin/users?verified=${verified}&page=${page}&size=${size}`),
+  adminVerify: (userId: number) => request<void>('POST', `/v1/admin/users/${userId}/verify`, {}),
+  adminCreateStaff: (body: {
+    username: string; displayName: string; email: string; password: string; role: Role; college?: string;
+  }) => request<{ id: number }>('POST', '/v1/admin/users', body),
+  adminDisable: (userId: number) => request<void>('POST', `/v1/admin/users/${userId}/disable`, {}),
 
   notifications: () => get<Page<Notification>>('/v1/notifications'),
   unreadCount: () => get<{ count: number }>('/v1/notifications/unread-count'),

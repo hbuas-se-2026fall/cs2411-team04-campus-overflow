@@ -38,6 +38,12 @@ export interface ReputationProfile {
   badges: { code: string; name: string; description: string; awardedAt: string }[];
 }
 
+/** 管理员看到的一行用户。学号已脱敏，明文只返回给本人（`/auth/me`）。 */
+export interface AdminUserRow {
+  id: number; maskedUsername: string; displayName: string; role: Role;
+  verified: boolean; college?: string; className?: string; createdAt: string;
+}
+
 /** 声誉流水一行。仅本人与管理员可读取（`GET /v1/users/{id}/reputation/ledger`）。 */
 export interface LedgerEntry {
   id: number; reason: string; reasonLabel: string; delta: number;

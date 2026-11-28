@@ -4,6 +4,8 @@ import com.campusoverflow.identity.application.AuthenticationAuditService;
 import com.campusoverflow.identity.application.LoginThrottle;
 import com.campusoverflow.identity.application.MeView;
 import com.campusoverflow.identity.application.RegisterUserCommand;
+import com.campusoverflow.identity.application.UpdateProfileCommand;
+import com.campusoverflow.identity.application.UserCommandService;
 import com.campusoverflow.identity.application.UserQueryService;
 import com.campusoverflow.identity.application.UserRegistrationService;
 import com.campusoverflow.shared.security.Actor;
@@ -31,6 +33,7 @@ import org.springframework.security.web.context.SecurityContextRepository;
 import org.springframework.security.web.csrf.CsrfToken;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -46,17 +49,20 @@ public class AuthController {
 
     private final UserRegistrationService registration;
     private final UserQueryService userQuery;
+    private final UserCommandService userCommand;
     private final AuthenticationManager authenticationManager;
     private final SecurityContextRepository securityContextRepository;
     private final LoginThrottle throttle;
     private final AuthenticationAuditService authAudit;
 
     public AuthController(UserRegistrationService registration, UserQueryService userQuery,
+                          UserCommandService userCommand,
                           AuthenticationManager authenticationManager,
                           SecurityContextRepository securityContextRepository, LoginThrottle throttle,
                           AuthenticationAuditService authAudit) {
         this.registration = registration;
         this.userQuery = userQuery;
+        this.userCommand = userCommand;
         this.authenticationManager = authenticationManager;
         this.securityContextRepository = securityContextRepository;
         this.throttle = throttle;
@@ -115,6 +121,22 @@ public class AuthController {
         return userQuery.me(actor.userId());
     }
 
+    /**
+     * 修改自己的资料。路径用 {@code /auth/me} 而非 {@code /users/{id}}：URL 里不带任何用户 id，
+     * 方法签名也就没有「改谁」这个参数，从接口层面杜绝越权改他人资料。
+     *
+     * <p>返回 204 而不是新的 {@code MeView}：前端提交成功后本来就要重新拉 {@code /auth/me} 刷新
+     * {@code auth.tsx} 里的全局状态（否则顶栏还显示旧昵称），返回体用不上。少一处数据契约也少一处
+     * 与 {@code MeView} 同步的负担。
+     */
+    @Operation(summary = "修改自己的资料（昵称 / 学院 / 班级）")
+    @PutMapping("/me")
+    public ResponseEntity<Void> updateProfile(@Parameter(hidden = true) Actor actor,
+                                             @Valid @RequestBody ProfileUpdateRequest req) {
+        userCommand.updateProfile(actor, new UpdateProfileCommand(req.displayName(), req.college(), req.className()));
+        return ResponseEntity.noContent().build();
+    }
+
     public record RegisterRequest(
             @NotBlank @Size(min = 4, max = 20) String username,
             @NotBlank @Size(min = 2, max = 20) String displayName,
@@ -125,5 +147,11 @@ public class AuthController {
     }
 
     public record LoginRequest(@NotBlank String username, @NotBlank String password) {
+    }
+
+    /** 只有这三个字段可改：学号是身份、角色归管理员、认证走审核流程，都不属于「个人资料」。 */
+    public record ProfileUpdateRequest(@Size(min = 2, max = 20) String displayName,
+                                       @Size(max = 50) String college,
+                                       @Size(max = 50) String className) {
     }
 }
